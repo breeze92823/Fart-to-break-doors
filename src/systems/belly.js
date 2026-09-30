@@ -107,5 +107,21 @@ export function syncBellyColor(root) {
   const belly = root?.nodes?.BellyUpper
   if (!belly) return
   const color = sampleTorsoColor(root.nodes.default_torso)
-  if (color) belly.material.color.copy(color)
+  if (!color) return
+  liftDark(color)
+  belly.material.color.copy(color)
+  // A faint self-glow in the same hue keeps the shading readable in the dim hall.
+  belly.material.emissive.copy(color).multiplyScalar(EMISSIVE_BOOST)
+  belly.material.roughness = 0.45 // some sheen so the curve catches the light
+}
+
+// Near-black skins swallow all the lighting and the belly turns into a flat
+// silhouette. Raise the lightness to a floor, keeping hue and saturation, so
+// a black character gets a dark charcoal belly whose shape still reads.
+const MIN_LIGHTNESS = 0.2
+const EMISSIVE_BOOST = 0.18
+const _hsl = {}
+function liftDark(color) {
+  color.getHSL(_hsl)
+  if (_hsl.l < MIN_LIGHTNESS) color.setHSL(_hsl.h, _hsl.s, MIN_LIGHTNESS)
 }
