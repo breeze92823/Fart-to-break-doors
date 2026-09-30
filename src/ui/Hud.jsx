@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useGameStore } from '../store/useGameStore.js'
-import { showMenu } from '../systems/bloxity.js'
+import { login, showMenu, subscribeAuth } from '../systems/bloxity.js'
 import { formatClock, formatShort } from '../utils/format.js'
 import { CUSTOM_SIZE_MAX, MENU_BUTTONS, OFFERS, REBIRTH_BANDS, STARTER_PACK_SECONDS } from '../data/hud.js'
 import { ArrowIcon, CashIcon, GemIcon } from './icons.jsx'
@@ -226,9 +226,23 @@ function RebirthBar() {
   )
 }
 
+// Shown only to signed-out players (guests); hidden once signed in, and until
+// the first auth state arrives so it doesn't flash for a signed-in player.
+function LoginButton() {
+  const [signedOut, setSignedOut] = useState(false)
+  useEffect(() => subscribeAuth((s) => setSignedOut(s.ready && !s.user)), [])
+  if (!signedOut) return null
+  return (
+    <button type="button" className="login-btn stroke" onClick={login}>
+      Bloxity Login
+    </button>
+  )
+}
+
 export default function Hud() {
   return (
     <div className="hud">
+      <LoginButton />
       <FartPowerBar />
       <TopRow />
       <RightColumn />

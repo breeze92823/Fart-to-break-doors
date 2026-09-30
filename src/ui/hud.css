@@ -550,6 +550,20 @@
   font-size: calc(62 * var(--u));
 }
 
+.login-btn {
+  position: absolute;
+  top: calc(16 * var(--u));
+  left: calc(16 * var(--u));
+  padding: calc(8 * var(--u)) calc(20 * var(--u));
+  font-size: calc(26 * var(--u));
+  border: 0;
+  border-radius: calc(12 * var(--u));
+  background: #3b82f6;
+  color: #fff;
+  cursor: pointer;
+  pointer-events: auto;
+}
+
 /* ---------- Corners ---------- */
 .corner {
   position: absolute;
