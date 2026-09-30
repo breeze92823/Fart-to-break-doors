@@ -90,6 +90,15 @@ export const GAIT = {
   sitLeg: -1.45, // thighs forward, seated
   sitArm: -0.5,
 
+  // Eating while seated (training): enthusiastic alternating shovelling.
+  eatHz: 1.6, // bites per second
+  eatArm: -2.0, // arm raised to the mouth
+  eatLean: 0.25, // spine dips into each bite
+  eatHead: 0.35, // head nod per bite
+  eatChew: 0.08, // fast chew wobble
+  eatTilt: 0.12, // side-to-side head rock
+  eatBob: 0.02,
+
   // Fart pose, blended in by fart.pose (0..1): hunch forward, butt out,
   // arms swung back, knees bent.
   fartLean: 0.75,

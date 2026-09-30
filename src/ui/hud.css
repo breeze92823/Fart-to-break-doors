@@ -911,11 +911,11 @@
   top: calc(-44 * var(--u));
   left: 0;
   right: 0;
-  font-size: calc(34 * var(--u));
+  font-size: calc(25.5 * var(--u));
   color: #ffd84a;
 }
 .tutorial__text {
-  font-size: calc(58 * var(--u));
+  font-size: calc(43.5 * var(--u));
   white-space: nowrap;
 }
 .tutorial--leaving {

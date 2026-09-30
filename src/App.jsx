@@ -9,6 +9,7 @@ import Ground from './components/Ground.jsx'
 import Room from './components/Room.jsx'
 import Lighting from './components/Lighting.jsx'
 import Player from './components/Player.jsx'
+import SeatedFood from './components/SeatedFood.jsx'
 import RemotePlayers from './components/RemotePlayers.jsx'
 import FartGas from './components/FartGas.jsx'
 import DoorHitFx from './components/DoorHitFx.jsx'
@@ -56,6 +57,7 @@ export default function App() {
         <LoadingGate />
       </Suspense>
       <Player />
+      <SeatedFood />
       <RemotePlayers />
       <FartGas />
       <DoorHitFx />

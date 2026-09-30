@@ -2,6 +2,7 @@ import { player } from './playerState.js'
 import { useGameStore } from '../store/useGameStore.js'
 import { equippedFartStats } from './farts.js'
 import { spawnCashPopup } from './cashPopups.js'
+import { makeEatingLoop } from './eatingSound.js'
 import { BUY_PADS } from '../data/room.js'
 import { FOODS, FOOD_BY_ID, TRAIN_INTERVAL } from '../data/foods.js'
 
@@ -13,6 +14,10 @@ const OPEN_RADIUS = PAD.radius + 0.6
 
 let wasNear = false
 let trainTimer = 0
+
+// Chewing loop for as long as the player trains.
+const eating = makeEatingLoop()
+const setEating = (on) => eating.set(on)
 
 export function buyFood(id) {
   const food = FOOD_BY_ID[id]
@@ -42,8 +47,10 @@ export function step(dt) {
   if (useGameStore.getState().seated !== player.seated) useGameStore.setState({ seated: player.seated })
   if (!player.seated) {
     trainTimer = 0
+    setEating(false)
     return
   }
+  setEating(true)
   trainTimer += dt
   if (trainTimer < TRAIN_INTERVAL) return
   trainTimer -= TRAIN_INTERVAL

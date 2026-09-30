@@ -9,7 +9,7 @@ export const TUTORIAL_POWER = 750 // Fart Power to reach in step 4
 export const TUTORIAL_DONE_STEP = 9
 
 // Where the red arrows lead in each step; `y` is the height of the bobbing
-// arrow above the target.
+// arrow above the target; null = no arrows in that step.
 const FOOD_PAD = BUY_PADS.find((p) => p.id === 'food')
 const FART_PAD = BUY_PADS.find((p) => p.id === 'fart')
 
@@ -20,7 +20,7 @@ export const TUTORIAL_TARGETS = [
   { x: FOOD_PAD.x, z: FOOD_PAD.z, y: 3.4 }, // step 3: the FOOD-PAD
   { x: TABLES[3].x, z: TABLES[3].z, y: 2.6 }, // step 4: the west table beside the training pit
   { x: 0, z: DOOR.z + 1.2, y: DOOR.height + 1.6 }, // step 5: the first door again
-  { x: 0, z: DOORS[9].z + 1.2, y: DOOR.height + 1.6 }, // step 6 (collect cash): the 10th door
+  null, // step 6 (collect $450): no arrows until the cash is collected
   { x: SPAWN.x, z: SPAWN.z, y: 2.4 }, // step 7 (go back): the hall, at the spawn
   { x: FART_PAD.x, z: FART_PAD.z, y: 3.4 }, // step 8: the FART-PAD
 ]

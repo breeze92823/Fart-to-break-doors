@@ -1,5 +1,6 @@
 import { inputState } from './input.js'
 import { player } from './playerState.js'
+import { playOwnFart } from './fartSound.js'
 import { useGameStore } from '../store/useGameStore.js'
 
 // The fart action: a screen click makes the player hunch forward (`pose`,
@@ -66,6 +67,7 @@ export function step(dt) {
     if (!player.seated && !fart.turned && fart.aligned && fart.time > FART.retrigger) {
       fart.time = 0
       fart.seq += 1
+      playOwnFart()
       // Spin round so the back points where the player was looking; Player
       // eases the model round to this over a few frames.
       player.facing += Math.PI

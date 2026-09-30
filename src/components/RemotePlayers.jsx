@@ -7,6 +7,8 @@ import { loadBaseCharacter } from '../systems/defaultCharacter.js'
 import { syncBellyColor, easeBellySize } from '../systems/belly.js'
 import { makeGait, updateGait, disposeGait } from '../systems/avatarAnim.js'
 import { FART, fartSources, makeFartState, stepFartState } from '../systems/fart.js'
+import { makeEatingLoop, volumeAt } from '../systems/eatingSound.js'
+import { playFartAt } from '../systems/fartSound.js'
 import Nametag from './Nametag.jsx'
 
 const _up = new Vector3(0, 1, 0)
@@ -55,6 +57,14 @@ function RemotePlayer({ p }) {
       seenSeq: p.fartSeq, // a fart from before we mounted isn't replayed
     }
   }
+
+  // Their chewing while seated, quieter the further they are from us.
+  const eatingRef = useRef(null)
+  if (!eatingRef.current) eatingRef.current = makeEatingLoop()
+  useEffect(() => {
+    const eating = eatingRef.current
+    return () => eating.dispose()
+  }, [])
 
   useEffect(() => {
     const src = fartRef.current
@@ -108,7 +118,10 @@ function RemotePlayer({ p }) {
     const f = src.fart
 
     if (p.fartSeq !== src.seenSeq) {
-      if (p.fartSeq > src.seenSeq && !p.seated) f.time = 0
+      if (p.fartSeq > src.seenSeq && !p.seated) {
+        f.time = 0
+        playFartAt(p.x, p.z)
+      }
       src.seenSeq = p.fartSeq
     }
     stepFartState(f, delta, p.seated)
@@ -127,6 +140,7 @@ function RemotePlayer({ p }) {
     g.quaternion.slerp(_targetQuat, 1 - Math.pow(fastTurn ? FART_TURN_RATE : LERP_RATE, delta))
 
     easeBellySize(avatar, p.bellySize, delta)
+    eatingRef.current.set(p.seated, volumeAt(src.pos.x, src.pos.z))
 
     const gait = gaitRef.current
     if (gait) updateGait(gait, delta, p.moveBlend, p.grounded, p.seated, f.pose)

@@ -6,6 +6,7 @@ import { CORRIDOR, DOOR, DOORS, WIN_ROOM } from '../data/world.js'
 import { DOOR_TAGS } from '../data/room.js'
 import { spawnCashPopup } from './cashPopups.js'
 import { equippedFartStats } from './farts.js'
+import { playDoorBreak, preloadDoorSound } from './doorSound.js'
 
 // Door health and break animation. Each fart that lands while the player is
 // within DOOR_REACH of the first intact door takes Fart Power off its health;
@@ -20,6 +21,7 @@ const FLASH_DECAY = 3 // 1/s
 export const doorAnim = DOORS.map(() => ({ open: 0, shake: 0, flash: 0 }))
 // Hits waiting for components/DoorHitFx.jsx to show a burst: { door, damage }.
 export const doorHits = []
+preloadDoorSound()
 let wasEmitting = false
 let wasTouching = false
 // The hazard stripe on the floor at the threshold (Room.jsx); stepping back
@@ -75,6 +77,7 @@ function hitDoor() {
   }
   useGameStore.setState((s) => ({ doorHp: hp, cash: s.cash + cash }))
   broken.forEach((j) => spawnCashPopup(Math.round(DOOR_TAGS[j].cash * fart.cash)))
+  if (broken.length) playDoorBreak()
 }
 
 // Bumping into an intact door makes the player fart once; they must back off

@@ -61,7 +61,7 @@ export default function TutorialBanner() {
           {step === 6 && `COLLECT CASH ${formatShort(Math.min(cash, TUTORIAL_CASH_2))}/${TUTORIAL_CASH_2}`}
           {step === 7 && 'GO BACK'}
           {step === 8 && 'BUY A FART FROM THE SHOP!'}
-          {done && 'TUTORIAL COMPLETE'}
+          {done && 'NOW, KEEP BREAKING DOORS!'}
         </div>
       </div>
       {/* Over the Back button (go back) or the STOP button (seated at the table). */}
