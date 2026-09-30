@@ -1,6 +1,6 @@
 import { inputState } from './input.js'
 import { player } from './playerState.js'
-import { GROUND_Y } from '../data/world.js'
+import { CORRIDOR, DOOR, GROUND_Y, HALL } from '../data/world.js'
 
 // Third-person follow with right-drag orbit + wheel zoom. Position and
 // look-at ease at different rates so the rig reads as a follow cam rather
@@ -19,6 +19,20 @@ const MAX_DIST = 40
 const ORBIT_SENS = 0.005
 const ZOOM_SENS = 0.01
 const FLOOR_MARGIN = 0.3 // m the camera stays above the ground
+const WALL_MARGIN = 0.5 // m the camera stays off walls
+const ROOF_CLEARANCE = 1.8 // m below the hall ceiling, clear of the girders
+
+// Keeps a camera position inside the hall, or inside the corridor while
+// it's in line with the corridor mouth.
+function clampToInterior(pos) {
+  pos.x = Math.min(Math.max(pos.x, HALL.minX + WALL_MARGIN), HALL.maxX - WALL_MARGIN)
+  const inCorridorLine = Math.abs(pos.x) < CORRIDOR.halfWidth - WALL_MARGIN
+  const minZ = inCorridorLine ? DOOR.z + WALL_MARGIN : HALL.minZ + WALL_MARGIN
+  pos.z = Math.min(Math.max(pos.z, minZ), HALL.maxZ - WALL_MARGIN)
+  const roof = pos.z < HALL.minZ ? CORRIDOR.height - WALL_MARGIN : HALL.height - ROOF_CLEARANCE
+  if (pos.y > roof) pos.y = roof
+}
+const _desired = { x: 0, y: 0, z: 0 }
 
 // Driven by the Bloxity `camera_sensitivity` setting (0.1-5.0, default 1).
 let sensitivity = 1
@@ -98,9 +112,11 @@ export function update(camera, dt) {
     const maxBoom = (target.y - (GROUND_Y + FLOOR_MARGIN)) / -dirY
     if (maxBoom < boom) boom = Math.max(maxBoom, 0.6)
   }
-  const desiredX = target.x + dirX * boom
-  const desiredY = target.y + dirY * boom
-  const desiredZ = target.z + dirZ * boom
+  _desired.x = target.x + dirX * boom
+  _desired.y = target.y + dirY * boom
+  _desired.z = target.z + dirZ * boom
+  clampToInterior(_desired)
+  const { x: desiredX, y: desiredY, z: desiredZ } = _desired
 
   if (!initialised || teleported) {
     camera.position.set(desiredX, desiredY, desiredZ)
