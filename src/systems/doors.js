@@ -2,7 +2,7 @@ import { fart, FART } from './fart.js'
 import { inputState } from './input.js'
 import { player } from './playerState.js'
 import { useGameStore } from '../store/useGameStore.js'
-import { CORRIDOR, DOOR, DOORS } from '../data/world.js'
+import { CORRIDOR, DOOR, DOORS, WIN_ROOM } from '../data/world.js'
 import { DOOR_TAGS } from '../data/room.js'
 import { spawnCashPopup } from './cashPopups.js'
 
@@ -41,10 +41,10 @@ export function firstIntactDoor() {
   return useGameStore.getState().doorHp.findIndex((hp) => hp > 0)
 }
 
-// Z the player can't cross: the face of the first unbroken door, else the corridor's end.
+// Z the player can't cross: the face of the first unbroken door, else the crown room's back wall.
 export function barrierZ() {
   const i = firstIntactDoor()
-  return i < 0 ? CORRIDOR.endZ : DOORS[i].z
+  return i < 0 ? WIN_ROOM.minZ : DOORS[i].z
 }
 
 function hitDoor() {
@@ -52,18 +52,27 @@ function hitDoor() {
   if (i < 0) return
   const dz = player.position.z - DOORS[i].z
   if (dz < 0 || dz > DOOR_REACH || Math.abs(player.position.x) > CORRIDOR.halfWidth) return
-  const { fartPower } = useGameStore.getState()
-  useGameStore.setState((s) => {
-    const hp = Math.max(0, s.doorHp[i] - fartPower)
-    return {
-      doorHp: s.doorHp.map((v, j) => (j === i ? hp : v)),
-      cash: hp === 0 ? s.cash + DOOR_TAGS[i].cash : s.cash,
+  const { fartPower, doorHp } = useGameStore.getState()
+  // Power left over after a door breaks carries on to the next door, and so on.
+  const hp = [...doorHp]
+  let cash = 0
+  let left = fartPower
+  const broken = []
+  for (let j = i; j < hp.length && left > 0; j += 1) {
+    if (hp[j] <= 0) continue
+    const damage = Math.min(left, hp[j])
+    hp[j] -= damage
+    left -= damage
+    doorAnim[j].shake = 1
+    doorAnim[j].flash = 1
+    doorHits.push({ door: j, damage })
+    if (hp[j] === 0) {
+      cash += DOOR_TAGS[j].cash
+      broken.push(j)
     }
-  })
-  if (useGameStore.getState().doorHp[i] === 0) spawnCashPopup(DOOR_TAGS[i].cash)
-  doorAnim[i].shake = 1
-  doorAnim[i].flash = 1
-  doorHits.push({ door: i, damage: fartPower })
+  }
+  useGameStore.setState((s) => ({ doorHp: hp, cash: s.cash + cash }))
+  broken.forEach((j) => spawnCashPopup(DOOR_TAGS[j].cash))
 }
 
 // Bumping into an intact door makes the player fart once; they must back off
@@ -113,6 +122,7 @@ export function step(dt) {
   const inCorridor = player.position.z < HAZARD_Z
   if (wasInCorridor && !inCorridor) resetDoors()
   wasInCorridor = inCorridor
+  if (useGameStore.getState().inDoorArea !== inCorridor) useGameStore.setState({ inDoorArea: inCorridor })
 
   autoFartOnContact()
   autoBreakFart()

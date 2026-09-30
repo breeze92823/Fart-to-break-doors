@@ -1,5 +1,6 @@
 import { CanvasTexture, RepeatWrapping, SRGBColorSpace } from 'three'
 import { seededRandom } from '../utils/random.js'
+import { formatShort } from '../utils/format.js'
 
 // Canvas-painted textures for the cafeteria hall. Each painter runs once;
 // results are cached by key so every mesh shares the same texture.
@@ -95,6 +96,396 @@ export function doorPlankTexture() {
       ctx.fillStyle = rand() < 0.5 ? 'rgba(50,25,8,0.14)' : 'rgba(255,215,160,0.08)'
       ctx.fillRect(rand() * w, rand() * h, 1.5, 8 + rand() * 30)
     }
+  })
+}
+
+// Marbled grey stone with darker horizontal bands: the gate leaves of the later doors.
+export function doorStoneTexture() {
+  return make('doorStone', 256, 320, (ctx, w, h) => {
+    const rand = seededRandom(9)
+    ctx.fillStyle = '#7d8190'
+    ctx.fillRect(0, 0, w, h)
+    for (let i = 0; i < 900; i++) {
+      const v = 70 + Math.floor(rand() * 110)
+      ctx.fillStyle = `rgba(${v}, ${v}, ${v + 12}, 0.25)`
+      ctx.beginPath()
+      ctx.ellipse(rand() * w, rand() * h, 3 + rand() * 16, 2 + rand() * 9, rand() * Math.PI, 0, Math.PI * 2)
+      ctx.fill()
+    }
+    // Dark horizontal slabs across the leaf.
+    ctx.fillStyle = 'rgba(40, 42, 54, 0.45)'
+    for (const y of [0.16, 0.5, 0.84]) ctx.fillRect(0, h * y - 22, w, 44)
+    ctx.fillStyle = 'rgba(20, 20, 28, 0.6)'
+    for (const y of [0.33, 0.67]) ctx.fillRect(0, h * y - 1.5, w, 3)
+  })
+}
+
+// Rusty riveted steel: blue-grey metal under orange corrosion, with bolted
+// horizontal plates. The gate leaves of doors 11-15.
+export function doorRustTexture() {
+  return make('doorRust', 256, 320, (ctx, w, h) => {
+    const rand = seededRandom(21)
+    ctx.fillStyle = '#8a93a8'
+    ctx.fillRect(0, 0, w, h)
+    const blot = (n, colors, rMin, rMax) => {
+      for (let i = 0; i < n; i++) {
+        ctx.fillStyle = colors[Math.floor(rand() * colors.length)]
+        ctx.beginPath()
+        ctx.ellipse(rand() * w, rand() * h, rMin + rand() * rMax, rMin + rand() * rMax * 0.8, rand() * Math.PI, 0, Math.PI * 2)
+        ctx.fill()
+      }
+    }
+    blot(260, ['rgba(120,135,165,0.35)', 'rgba(200,210,230,0.25)'], 4, 18)
+    // Darker recessed plates with bolts.
+    for (const y of [0.3, 0.72]) {
+      ctx.fillStyle = 'rgba(60,70,95,0.4)'
+      ctx.fillRect(10, h * y - 26, w - 20, 52)
+      ctx.fillStyle = 'rgba(230,235,245,0.75)'
+      for (const x of [0.15, 0.4, 0.65, 0.88]) {
+        ctx.beginPath()
+        ctx.arc(w * x, h * y, 7, 0, Math.PI * 2)
+        ctx.fill()
+      }
+    }
+    // Rust over the top.
+    blot(420, ['rgba(196,108,52,0.45)', 'rgba(170,82,36,0.4)', 'rgba(225,140,80,0.35)'], 3, 14)
+    blot(500, ['rgba(214,122,62,0.5)', 'rgba(150,70,30,0.35)'], 1, 5)
+    ctx.strokeStyle = 'rgba(40,30,30,0.55)'
+    ctx.lineWidth = 3
+    ctx.strokeRect(1.5, 1.5, w - 3, h - 3)
+  })
+}
+
+// Navy marble gate leaf: white marble skirt, a hazard stripe, then a barred
+// glass window in a marble frame. The gate leaves of doors 16-20.
+export function doorGlassTexture() {
+  return make('doorGlass', 256, 320, (ctx, w, h) => {
+    const rand = seededRandom(33)
+    const marble = (x, y, mw, mh, base, n) => {
+      ctx.fillStyle = base
+      ctx.fillRect(x, y, mw, mh)
+      for (let i = 0; i < n; i++) {
+        const v = Math.floor(rand() * 90)
+        ctx.fillStyle = rand() < 0.5 ? `rgba(${40 + v}, ${60 + v}, ${95 + v}, 0.35)` : 'rgba(10,18,40,0.3)'
+        ctx.beginPath()
+        ctx.ellipse(x + rand() * mw, y + rand() * mh, 3 + rand() * 12, 2 + rand() * 7, rand() * Math.PI, 0, Math.PI * 2)
+        ctx.fill()
+      }
+    }
+    // Top frame block (the texture's y=0 is the top of the leaf).
+    marble(0, 0, w, h, '#33405e', 500)
+    // Barred glass window.
+    const gx = 14, gy = 30, gw = w - 28, gh = 130
+    ctx.fillStyle = '#9fe6ff'
+    ctx.fillRect(gx, gy, gw, gh)
+    const grad = ctx.createLinearGradient(0, gy, 0, gy + gh)
+    grad.addColorStop(0, 'rgba(255,255,255,0.45)')
+    grad.addColorStop(1, 'rgba(60,170,220,0.2)')
+    ctx.fillStyle = grad
+    ctx.fillRect(gx, gy, gw, gh)
+    ctx.fillStyle = '#4a4f78'
+    for (let i = 0; i <= 6; i++) ctx.fillRect(gx + (i * (gw - 8)) / 6, gy, 8, gh)
+    ctx.fillRect(gx, gy, gw, 8)
+    ctx.fillRect(gx, gy + gh - 8, gw, 8)
+    // Hazard stripe.
+    const hy = 176, hh = 50
+    ctx.save()
+    ctx.beginPath()
+    ctx.rect(0, hy, w, hh)
+    ctx.clip()
+    ctx.fillStyle = '#1d1d1d'
+    ctx.fillRect(0, hy, w, hh)
+    ctx.fillStyle = '#ffd21f'
+    for (let x = -hh; x < w + hh; x += 48) {
+      ctx.beginPath()
+      ctx.moveTo(x, hy + hh)
+      ctx.lineTo(x + 24, hy + hh)
+      ctx.lineTo(x + 24 + hh, hy)
+      ctx.lineTo(x + hh, hy)
+      ctx.fill()
+    }
+    ctx.restore()
+    // White marble skirt.
+    marble(6, hy + hh + 4, w - 12, h - hy - hh - 10, '#e4eaec', 120)
+    ctx.strokeStyle = 'rgba(20,28,50,0.7)'
+    ctx.lineWidth = 4
+    ctx.strokeRect(2, 2, w - 4, h - 4)
+  })
+}
+
+// Blue-grey steel plates studded with rivets (4 rows of 6). The gate leaves of doors 21-25.
+export function doorSteelTexture() {
+  return make('doorSteel', 256, 320, (ctx, w, h) => {
+    const rand = seededRandom(47)
+    ctx.fillStyle = '#6b7ba0'
+    ctx.fillRect(0, 0, w, h)
+    for (let i = 0; i < 300; i++) {
+      ctx.fillStyle = rand() < 0.5 ? 'rgba(150,165,205,0.12)' : 'rgba(40,50,85,0.1)'
+      ctx.fillRect(rand() * w, rand() * h, 6 + rand() * 30, 6 + rand() * 20)
+    }
+    // Plate seams: one across the middle, a lighter one along the outer edge.
+    ctx.fillStyle = 'rgba(30,38,70,0.55)'
+    ctx.fillRect(0, h / 2 - 2, w, 4)
+    ctx.fillStyle = 'rgba(170,185,225,0.35)'
+    ctx.fillRect(0, h / 2 + 2, w, 2)
+    ctx.fillStyle = 'rgba(30,38,70,0.4)'
+    ctx.fillRect(0, 0, w, 5)
+    ctx.fillRect(0, h - 5, w, 5)
+    for (const fy of [0.14, 0.38, 0.62, 0.86]) {
+      for (let i = 0; i < 6; i++) {
+        const x = 22 + i * ((w - 44) / 5)
+        ctx.fillStyle = 'rgba(25,32,60,0.35)'
+        ctx.beginPath()
+        ctx.arc(x + 1.5, h * fy + 2, 8, 0, Math.PI * 2)
+        ctx.fill()
+        ctx.fillStyle = '#d6e0f5'
+        ctx.beginPath()
+        ctx.arc(x, h * fy, 7, 0, Math.PI * 2)
+        ctx.fill()
+      }
+    }
+  })
+}
+
+// Teal diamond-plate steel with a rivet row across the middle. The gate leaves of doors 26-30.
+export function doorDiamondTexture() {
+  return make('doorDiamond', 256, 320, (ctx, w, h) => {
+    const rand = seededRandom(61)
+    ctx.fillStyle = '#58b8c0'
+    ctx.fillRect(0, 0, w, h)
+    // Tread-plate lugs: short diagonal dashes in alternating directions.
+    ctx.lineCap = 'round'
+    ctx.lineWidth = 3
+    const step = 16
+    for (let y = 0; y < h + step; y += step) {
+      for (let x = 0; x < w + step; x += step) {
+        const flip = ((x / step + y / step) & 1) === 0
+        const dx = flip ? 5 : -5
+        ctx.strokeStyle = 'rgba(20,80,90,0.45)'
+        ctx.beginPath()
+        ctx.moveTo(x - dx, y - 5 + 1.5)
+        ctx.lineTo(x + dx, y + 5 + 1.5)
+        ctx.stroke()
+        ctx.strokeStyle = 'rgba(200,250,255,0.6)'
+        ctx.beginPath()
+        ctx.moveTo(x - dx, y - 5)
+        ctx.lineTo(x + dx, y + 5)
+        ctx.stroke()
+      }
+    }
+    for (let i = 0; i < 160; i++) {
+      ctx.fillStyle = rand() < 0.5 ? 'rgba(255,255,255,0.05)' : 'rgba(10,50,60,0.06)'
+      ctx.fillRect(rand() * w, rand() * h, 10 + rand() * 30, 8 + rand() * 20)
+    }
+    // Rivet row across the middle.
+    ctx.fillStyle = '#d8f8fc'
+    for (let x = 12; x < w; x += 22) {
+      ctx.beginPath()
+      ctx.arc(x, h / 2, 4.5, 0, Math.PI * 2)
+      ctx.fill()
+    }
+  })
+}
+
+// Lavender steel plate: rivet rows top and bottom around a darker riveted band. Doors 31-35.
+export function doorPurpleTexture() {
+  return make('doorPurple', 256, 320, (ctx, w, h) => {
+    const rand = seededRandom(73)
+    ctx.fillStyle = '#8b8bd6'
+    ctx.fillRect(0, 0, w, h)
+    for (let i = 0; i < 200; i++) {
+      ctx.fillStyle = rand() < 0.5 ? 'rgba(200,200,255,0.08)' : 'rgba(50,50,120,0.08)'
+      ctx.fillRect(rand() * w, rand() * h, 8 + rand() * 30, 6 + rand() * 20)
+    }
+    ctx.fillStyle = 'rgba(60,60,130,0.6)'
+    ctx.fillRect(0, h * 0.44, w, h * 0.12)
+    const rivets = (y) => {
+      for (let i = 0; i < 4; i++) {
+        const x = 34 + i * ((w - 68) / 3)
+        ctx.fillStyle = 'rgba(30,30,80,0.4)'
+        ctx.beginPath()
+        ctx.ellipse(x + 1, y + 1.5, 7, 6, 0, 0, Math.PI * 2)
+        ctx.fill()
+        ctx.fillStyle = '#3d3d86'
+        ctx.beginPath()
+        ctx.ellipse(x, y, 7, 6, 0, 0, Math.PI * 2)
+        ctx.fill()
+      }
+    }
+    rivets(h * 0.06)
+    rivets(h * 0.5)
+    rivets(h * 0.94)
+  })
+}
+
+// Yellow/black diagonal stripes on a tall post.
+export function doorPostTexture() {
+  return make('doorPost', 64, 256, (ctx, w, h) => {
+    ctx.fillStyle = '#1d1d1d'
+    ctx.fillRect(0, 0, w, h)
+    ctx.fillStyle = '#ffd21f'
+    for (let y = -w; y < h + w; y += 64) {
+      ctx.beginPath()
+      ctx.moveTo(0, y + 32)
+      ctx.lineTo(0, y)
+      ctx.lineTo(w, y - w)
+      ctx.lineTo(w, y - w + 32)
+      ctx.fill()
+    }
+  })
+}
+
+// Black scuffed steel with a dark-red X brace and a pale-blue ringed emblem. Doors 36-40.
+export function doorBlackTexture() {
+  return make('doorBlack', 256, 320, (ctx, w, h) => {
+    const rand = seededRandom(83)
+    ctx.fillStyle = '#26272c'
+    ctx.fillRect(0, 0, w, h)
+    for (let i = 0; i < 500; i++) {
+      ctx.fillStyle = rand() < 0.5 ? 'rgba(150,150,165,0.07)' : 'rgba(0,0,0,0.18)'
+      ctx.fillRect(rand() * w, rand() * h, 2 + rand() * 24, 1 + rand() * 6)
+    }
+    // Inset panel border.
+    ctx.strokeStyle = 'rgba(0,0,0,0.6)'
+    ctx.lineWidth = 8
+    ctx.strokeRect(14, 14, w - 28, h - 28)
+    // Dark-red X brace.
+    ctx.strokeStyle = '#4a1d1d'
+    ctx.lineWidth = 26
+    ctx.beginPath()
+    ctx.moveTo(22, 22)
+    ctx.lineTo(w - 22, h - 22)
+    ctx.moveTo(w - 22, 22)
+    ctx.lineTo(22, h - 22)
+    ctx.stroke()
+    // Emblem: broken outer ring, inner ring, three inward arrows.
+    const cx = w / 2, cy = h / 2, R = 62
+    ctx.strokeStyle = 'rgba(200,225,245,0.9)'
+    ctx.fillStyle = 'rgba(200,225,245,0.9)'
+    ctx.lineWidth = 9
+    for (let k = 0; k < 3; k++) {
+      const a0 = k * ((Math.PI * 2) / 3) + 0.25
+      ctx.beginPath()
+      ctx.arc(cx, cy, R, a0, a0 + 1.7)
+      ctx.stroke()
+    }
+    ctx.lineWidth = 6
+    ctx.beginPath()
+    ctx.arc(cx, cy, R * 0.62, 0, Math.PI * 2)
+    ctx.stroke()
+    for (let k = 0; k < 3; k++) {
+      const a = -Math.PI / 2 + k * ((Math.PI * 2) / 3)
+      ctx.save()
+      ctx.translate(cx + Math.cos(a) * R * 0.3, cy + Math.sin(a) * R * 0.3)
+      ctx.rotate(a + Math.PI / 2)
+      ctx.beginPath()
+      ctx.moveTo(0, 10)
+      ctx.lineTo(-10, -8)
+      ctx.lineTo(10, -8)
+      ctx.fill()
+      ctx.restore()
+    }
+  })
+}
+
+// Vault leaf: rivet rows, an inset panel and a spoked wheel, in the given palette.
+function vaultTexture(key, c) {
+  return make(key, 256, 320, (ctx, w, h) => {
+    ctx.fillStyle = c.base
+    ctx.fillRect(0, 0, w, h)
+    ctx.fillStyle = c.panel
+    ctx.fillRect(10, 10, w - 20, h - 20)
+    ctx.strokeStyle = c.dark
+    ctx.lineWidth = 6
+    ctx.strokeRect(10, 10, w - 20, h - 20)
+    // Rivet rows top and bottom.
+    for (const y of [32, h - 32]) {
+      for (let x = 26; x < w - 16; x += 26) {
+        ctx.fillStyle = c.dark
+        ctx.beginPath()
+        ctx.ellipse(x + 1, y + 2, 7, 5, 0, 0, Math.PI * 2)
+        ctx.fill()
+        ctx.fillStyle = c.light
+        ctx.beginPath()
+        ctx.ellipse(x, y, 7, 5, 0, 0, Math.PI * 2)
+        ctx.fill()
+      }
+    }
+    // Wheel.
+    const cx = w / 2, cy = h / 2, R = 78
+    ctx.lineWidth = 12
+    ctx.strokeStyle = c.ring
+    ctx.beginPath()
+    ctx.arc(cx, cy, R, 0, Math.PI * 2)
+    ctx.stroke()
+    ctx.lineWidth = 5
+    ctx.strokeStyle = c.light
+    ctx.beginPath()
+    ctx.arc(cx, cy, R + 6, 0, Math.PI * 2)
+    ctx.stroke()
+    for (let k = 0; k < 8; k++) {
+      const a = (k * Math.PI) / 4
+      ctx.lineWidth = 10
+      ctx.strokeStyle = c.spoke
+      ctx.beginPath()
+      ctx.moveTo(cx, cy)
+      ctx.lineTo(cx + Math.cos(a) * (R + 16), cy + Math.sin(a) * (R + 16))
+      ctx.stroke()
+      ctx.fillStyle = c.knob
+      ctx.beginPath()
+      ctx.arc(cx + Math.cos(a) * (R + 16), cy + Math.sin(a) * (R + 16), 8, 0, Math.PI * 2)
+      ctx.fill()
+    }
+    ctx.fillStyle = c.hub
+    ctx.beginPath()
+    ctx.arc(cx, cy, 24, 0, Math.PI * 2)
+    ctx.fill()
+    ctx.strokeStyle = c.knob
+    ctx.lineWidth = 5
+    ctx.stroke()
+  })
+}
+
+// Gold vault leaf. Doors 41-45.
+export const doorGoldTexture = () =>
+  vaultTexture('doorGold', { base: '#f2c814', panel: '#ffe24a', dark: '#c99a0c', light: '#fff07a', ring: '#d9a511', spoke: '#e0ac12', knob: '#b8830a', hub: '#ffd21f' })
+
+// Ice-blue vault leaf. Doors 46-50.
+export const doorIceTexture = () =>
+  vaultTexture('doorIce', { base: '#9fbce8', panel: '#dbe8fb', dark: '#6f8bc0', light: '#f4f8ff', ring: '#8aa6d8', spoke: '#a9c0ea', knob: '#5f7cb4', hub: '#c8daf6' })
+
+// Speckled grey-blue concrete floor, tiled.
+export function speckleFloorTexture(repeat) {
+  return make(
+    'speckleFloor',
+    256,
+    256,
+    (ctx, w, h) => {
+      const rand = seededRandom(97)
+      ctx.fillStyle = '#6f7a92'
+      ctx.fillRect(0, 0, w, h)
+      for (let i = 0; i < 6000; i++) {
+        const v = 70 + Math.floor(rand() * 110)
+        ctx.fillStyle = `rgba(${v}, ${v + 6}, ${v + 22}, 0.55)`
+        ctx.fillRect(rand() * w, rand() * h, 1 + rand() * 3, 1 + rand() * 3)
+      }
+    },
+    { repeatX: repeat, repeatY: repeat },
+  )
+}
+
+// Small cell window: a steel frame round bright sky-blue glass behind vertical bars.
+export function barredWindowTexture() {
+  return make('barredWindow', 128, 96, (ctx, w, h) => {
+    ctx.fillStyle = '#4b5a80'
+    ctx.fillRect(0, 0, w, h)
+    const g = ctx.createLinearGradient(0, 8, 0, h - 8)
+    g.addColorStop(0, '#ffffff')
+    g.addColorStop(1, '#bfe6ff')
+    ctx.fillStyle = g
+    ctx.fillRect(9, 9, w - 18, h - 18)
+    ctx.fillStyle = '#56648c'
+    for (let i = 1; i < 6; i++) ctx.fillRect(9 + (i * (w - 18)) / 6 - 3, 9, 6, h - 18)
   })
 }
 
@@ -543,9 +934,9 @@ export function doorTagTexture(level, hp, max) {
     ctx.stroke()
     ctx.font = '800 40px "Arial Rounded MT Bold", "Arial Black", sans-serif'
     ctx.lineWidth = 8
-    ctx.strokeText(`${hp}/${max}`, w / 2, by + bh / 2 + 2)
+    ctx.strokeText(`${formatShort(hp)}/${formatShort(max)}`, w / 2, by + bh / 2 + 2)
     ctx.fillStyle = '#fff'
-    ctx.fillText(`${hp}/${max}`, w / 2, by + bh / 2 + 2)
+    ctx.fillText(`${formatShort(hp)}/${formatShort(max)}`, w / 2, by + bh / 2 + 2)
   })
 }
 

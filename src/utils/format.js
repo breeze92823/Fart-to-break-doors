@@ -14,7 +14,8 @@ export function formatShort(n) {
   }
   const digits = v >= 100 ? 0 : v >= 10 ? 1 : 2
   const factor = 10 ** digits
-  const text = (Math.floor(v * factor) / factor).toFixed(digits).replace(/\.?0+$/, '')
+  const fixed = (Math.floor(v * factor) / factor).toFixed(digits)
+  const text = digits ? fixed.replace(/\.?0+$/, '') : fixed
   return sign + text + SUFFIXES[i]
 }
 

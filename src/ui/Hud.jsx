@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import { useGameStore } from '../store/useGameStore.js'
 import { login, showMenu, subscribeAuth } from '../systems/bloxity.js'
+import { resetPlayer } from '../systems/playerState.js'
+import { SPAWN, SPAWN_FACING } from '../data/world.js'
 import { formatClock, formatShort } from '../utils/format.js'
 import { CUSTOM_SIZE_MAX, MENU_BUTTONS, OFFERS, REBIRTH_BANDS, STARTER_PACK_SECONDS } from '../data/hud.js'
 import { ArrowIcon, CashIcon, GemIcon } from './icons.jsx'
@@ -241,10 +243,29 @@ function LoginButton() {
   )
 }
 
+// Shown while the player is past the hazard stripe; sends them back to the hall.
+function BackButton() {
+  const inDoorArea = useGameStore((s) => s.inDoorArea)
+  if (!inDoorArea) return null
+  return (
+    <button
+      type="button"
+      className="back-btn stroke"
+      onClick={() => {
+        useGameStore.setState({ autoBreak: false })
+        resetPlayer(SPAWN, SPAWN_FACING)
+      }}
+    >
+      BACK
+    </button>
+  )
+}
+
 export default function Hud() {
   return (
     <div className="hud">
       <LoginButton />
+      <BackButton />
       <FartPowerBar />
       <TopRow />
       <RightColumn />

@@ -9,7 +9,7 @@ export const useGameStore = create(() => ({
   avatarLoaded: false, // player character (incl. Bloxity accessories) finished loading
 
   cash: 0,
-  fartPower: 20,
+  fartPower: Number(import.meta.env.VITE_START_FART_POWER) || 20, // .env.example
   rebirths: 0,
 
   // HUD display values whose rules are still TBD in PROGRESSION.md.
@@ -20,6 +20,7 @@ export const useGameStore = create(() => ({
   doorHp: DOOR_TAGS.map((t) => t.hp), // remaining health per door, in DOORS order; 0 = broken
 
   autoBreak: false,
+  inDoorArea: false, // player is past the hazard stripe (shows the Back button)
   bellySize: 1, // belly/waist multiplier (systems/belly.js BELLY_SIZE), synced to other players
   customSize: null, // null = default size, else 1..CUSTOM_SIZE_MAX
 }))

@@ -11,12 +11,13 @@ import {
   SphereGeometry,
   SpriteMaterial,
 } from 'three'
-import { CORRIDOR, DOOR, DOORS, HALL } from '../data/world.js'
+import { CORRIDOR, DOOR, DOORS, HALL, WIN_ROOM } from '../data/world.js'
 import { doorAnim, DOOR_OPEN_ANGLE } from '../systems/doors.js'
 import { useGameStore } from '../store/useGameStore.js'
 import {
   BENCH,
   BUY_PADS,
+  CROWN,
   DOOR_TAGS,
   CRATES,
   EGG_MAT,
@@ -39,12 +40,25 @@ import {
   TRAINING_AREA,
   TRAINING_PIT,
   TRAINING_SIGNS,
+  WIN_PILLARS,
 } from '../data/room.js'
 import {
+  barredWindowTexture,
+  speckleFloorTexture,
   chevronTexture,
   crateTexture,
   doorCrackTextures,
   doorPlankTexture,
+  doorStoneTexture,
+  doorRustTexture,
+  doorGlassTexture,
+  doorSteelTexture,
+  doorDiamondTexture,
+  doorPurpleTexture,
+  doorBlackTexture,
+  doorGoldTexture,
+  doorIceTexture,
+  doorPostTexture,
   doorTagTexture,
   eggTexture,
   glowCurtainTexture,
@@ -129,6 +143,34 @@ function materials() {
     crate: std('#ffffff', { map: crateTexture() }),
     doorPlanks: std('#ffffff', { map: doorPlankTexture() }),
     doorWood: std('#6b3d20'),
+    doorStone: std('#ffffff', { map: doorStoneTexture(), roughness: 0.95 }),
+    doorStoneRail: std('#5b5f6e', { roughness: 0.95 }),
+    doorStoneFrame: std('#8a8d9a', { roughness: 0.95 }),
+    doorRust: std('#ffffff', { map: doorRustTexture(), roughness: 0.85, metalness: 0.25 }),
+    doorRustRail: std('#9a5a33', { roughness: 0.9, metalness: 0.2 }),
+    doorGlass: std('#ffffff', { map: doorGlassTexture(), roughness: 0.6 }),
+    doorGlassRail: std('#2c3752', { roughness: 0.7 }),
+    doorGlassFrame: std('#2f3b5a', { roughness: 0.7 }),
+    doorSteel: std('#ffffff', { map: doorSteelTexture(), roughness: 0.55, metalness: 0.3 }),
+    doorSteelRail: std('#56658a', { roughness: 0.6, metalness: 0.3 }),
+    doorSteelFrame: std('#5a6688', { roughness: 0.8 }),
+    doorDiamond: std('#ffffff', { map: doorDiamondTexture(), roughness: 0.5, metalness: 0.35 }),
+    doorDiamondRail: std('#4aa6ae', { roughness: 0.5, metalness: 0.35 }),
+    doorDiamondFrame: std('#2f7f88', { roughness: 0.6, metalness: 0.25 }),
+    doorPurple: std('#ffffff', { map: doorPurpleTexture(), roughness: 0.55, metalness: 0.3 }),
+    doorPurpleRail: std('#4d4da0', { roughness: 0.5, metalness: 0.3 }),
+    doorPurpleFrame: std('#3a3a86', { roughness: 0.6, metalness: 0.25 }),
+    doorPost: std('#ffffff', { map: doorPostTexture(), roughness: 0.6 }),
+    doorBlack: std('#ffffff', { map: doorBlackTexture(), roughness: 0.6, metalness: 0.4 }),
+    doorBlackRail: std('#2a2b30', { roughness: 0.6, metalness: 0.4 }),
+    doorBlackFrame: std('#1c1d21', { roughness: 0.7, metalness: 0.3 }),
+    doorGold: std('#ffffff', { map: doorGoldTexture(), roughness: 0.3, metalness: 0.6 }),
+    doorGoldRail: std('#d9a511', { roughness: 0.3, metalness: 0.6 }),
+    doorGoldFrame: std('#e8b814', { roughness: 0.35, metalness: 0.55 }),
+    doorIce: std('#ffffff', { map: doorIceTexture(), roughness: 0.3, metalness: 0.5 }),
+    doorIceRail: std('#a9c0ea', { roughness: 0.3, metalness: 0.5 }),
+    doorIceFrame: std('#b8cdf0', { roughness: 0.35, metalness: 0.45 }),
+    doorRustFrame: std('#a8643a', { roughness: 0.9, metalness: 0.2 }),
     doorFrame: std('#4a2a17'),
     sink: std('#f3f6fb', { roughness: 0.3 }),
     chrome: std('#cfd6e2', { roughness: 0.2, metalness: 0.9 }),
@@ -145,6 +187,19 @@ function materials() {
       toneMapped: false,
     }),
     hazard: decal(hazardTexture(16), { transparent: false }),
+    winWall: std('#a6b6d8'),
+    winWallLow: std('#6f80a8'),
+    winFloor: decal(speckleFloorTexture(8), { transparent: false }),
+    winTrim: std('#46557a'),
+    winCeiling: std('#34467a'),
+    winPillar: std('#93a8d4', { roughness: 0.6, metalness: 0.15 }),
+    winWindow: new MeshBasicMaterial({ map: barredWindowTexture(), toneMapped: false }),
+    pedestalBase: std('#44557f', { roughness: 0.6, metalness: 0.2 }),
+    pedestalGlow: new MeshBasicMaterial({ color: '#eaf4ff', toneMapped: false }),
+    crownGold: std('#ffc81a', { roughness: 0.25, metalness: 0.75, emissive: '#6b4a00', emissiveIntensity: 0.35, side: DoubleSide }),
+    gemRed: std('#ff2d4a', { roughness: 0.15, metalness: 0.2, emissive: '#7a0012', emissiveIntensity: 0.5 }),
+    gemBlue: std('#3fb4ff', { roughness: 0.15, metalness: 0.2, emissive: '#004f7a', emissiveIntensity: 0.5 }),
+    gemGreen: std('#3dff7a', { roughness: 0.15, metalness: 0.2, emissive: '#00662a', emissiveIntensity: 0.5 }),
     chevrons: decal(chevronTexture(), { toneMapped: false }),
   }
   return mats
@@ -329,7 +384,6 @@ function Corridor() {
       <Box p={[-HW - T / 2, CH / 2, midZ]} s={[T, CH, len]} m={m.wall} />
       <Box p={[HW + T / 2, CH / 2, midZ]} s={[T, CH, len]} m={m.wall} />
       <Box p={[0, CH + 0.25, midZ]} s={[2 * HW + 2 * T, 0.5, len]} m={m.ceiling} />
-      <Box p={[0, CH / 2, CORRIDOR.endZ - T / 2]} s={[2 * HW + 2 * T, CH, T]} m={m.wall} />
       <Box p={[-HW + 0.06, 0.65, midZ]} s={[0.12, 1.3, len]} m={m.wallLow} />
       <Box p={[HW - 0.06, 0.65, midZ]} s={[0.12, 1.3, len]} m={m.wallLow} />
 
@@ -359,6 +413,20 @@ function Corridor() {
 
 // The breakable door: two plank leaves in a heavy frame, each with rails and
 // an X brace. Named so gameplay can find it later.
+// Doors 1-5 wood, 6-10 grey stone, 11-15 rusty steel, 16-20 navy glass gate, 21-25 riveted blue steel, 26-30 teal diamond plate, 31-35 purple plate with hazard posts, 36-40 black emblem gate, 41-45 gold vault, 46-50 ice-blue vault.
+const DOOR_SETS = [
+  { planks: 'doorPlanks', rails: 'doorWood', frame: 'doorFrame' },
+  { planks: 'doorStone', rails: 'doorStoneRail', frame: 'doorStoneFrame' },
+  { planks: 'doorRust', rails: 'doorRustRail', frame: 'doorRustFrame' },
+  { planks: 'doorGlass', rails: 'doorGlassRail', frame: 'doorGlassFrame', bare: true },
+  { planks: 'doorSteel', rails: 'doorSteelRail', frame: 'doorSteelFrame', bare: true },
+  { planks: 'doorDiamond', rails: 'doorDiamondRail', frame: 'doorDiamondFrame' },
+  { planks: 'doorPurple', rails: 'doorPurpleRail', frame: 'doorPurpleFrame', bare: true, posts: true },
+  { planks: 'doorBlack', rails: 'doorBlackRail', frame: 'doorBlackFrame', bare: true },
+  { planks: 'doorGold', rails: 'doorGoldRail', frame: 'doorGoldFrame', bare: true },
+  { planks: 'doorIce', rails: 'doorIceRail', frame: 'doorIceFrame', bare: true },
+]
+const doorSet = (index) => Math.min(DOOR_SETS.length - 1, Math.floor(index / 5))
 function Door({ z, index }) {
   const m = materials()
   const h = DOOR.height
@@ -379,13 +447,16 @@ function Door({ z, index }) {
   const rightRef = useRef()
   // Own wood materials so a hit can tint this door red without touching the others.
   const wood = useMemo(() => {
-    const planks = m.doorPlanks.clone()
-    const rails = m.doorWood.clone()
+    const set = DOOR_SETS[doorSet(index)]
+    const planks = m[set.planks].clone()
+    const rails = m[set.rails].clone()
     for (const x of [planks, rails]) x.emissive.set('#ff1a10')
     return { planks, rails }
-  }, [m])
+  }, [m, index])
   // Cracks appear below half health and pile on as it drops.
   const crackMats = useMemo(() => doorCrackTextures().map((map) => new MeshBasicMaterial({ map, transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2 })), [])
+  const glass = !!DOOR_SETS[doorSet(index)].bare // the art is painted on the leaf; no rails or brace over it
+  const frameMat = m[DOOR_SETS[doorSet(index)].frame]
   const hpFrac = useGameStore((s) => s.doorHp[index] / DOOR_TAGS[index].max)
   const crackStage = hpFrac >= 0.5 ? 0 : hpFrac >= 0.3 ? 1 : hpFrac >= 0.12 ? 2 : 3
   useFrame(({ clock }) => {
@@ -400,20 +471,26 @@ function Door({ z, index }) {
 
   return (
     <group ref={rootRef} name={index === 0 ? 'door' : `door-${index + 1}`} position={[0, 0, z - t / 2]}>
-      <Box p={[-HW + 0.2, (h + 0.4) / 2, 0]} s={[0.4, h + 0.4, t + 0.3]} m={m.doorFrame} cast />
-      <Box p={[HW - 0.2, (h + 0.4) / 2, 0]} s={[0.4, h + 0.4, t + 0.3]} m={m.doorFrame} cast />
-      <Box p={[0, h + 0.2, 0]} s={[2 * HW, 0.4, t + 0.3]} m={m.doorFrame} cast />
+      <Box p={[-HW + 0.2, (h + 0.4) / 2, 0]} s={[0.4, h + 0.4, t + 0.3]} m={frameMat} cast />
+      <Box p={[HW - 0.2, (h + 0.4) / 2, 0]} s={[0.4, h + 0.4, t + 0.3]} m={frameMat} cast />
+      <Box p={[0, h + 0.2, 0]} s={[2 * HW, 0.4, t + 0.3]} m={frameMat} cast />
+      {DOOR_SETS[doorSet(index)].posts && [-1, 1].map((side) => (
+        <Box key={side} p={[side * (HW - 0.85), panelH / 2 + 0.05, 0]} s={[0.7, panelH + 0.1, t + 0.2]} m={m.doorPost} cast />
+      ))}
       {[-1, 1].map((side) => (
         <group key={side} ref={side < 0 ? leftRef : rightRef} name={side < 0 ? 'door-left' : 'door-right'} position={[side * leafW, 0, 0]}>
          {/* Hinged on the outer edge: the inner group re-centres the leaf on the pivot */}
          <group position={[-side * (leafW / 2), 0, 0]}>
           {/* Solid lower panel: planks, a base rail, a cap rail and an X brace */}
           <Box p={[0, panelH / 2, 0]} s={[leafW - 0.04, panelH, t]} m={wood.planks} cast />
+          {!glass && (
+            <>
           <Box p={[0, 0.16, front]} s={[leafW - 0.04, 0.32, 0.12]} m={wood.rails} cast />
           <Box p={[0, panelH - 0.14, front]} s={[leafW - 0.04, 0.28, 0.12]} m={wood.rails} cast />
           <Box p={[0, (braceTop + braceBottom) / 2, front + 0.02]} s={[braceLen, 0.26, 0.1]} r={[0, 0, braceAngle]} m={wood.rails} />
           <Box p={[0, (braceTop + braceBottom) / 2, front + 0.02]} s={[braceLen, 0.26, 0.1]} r={[0, 0, -braceAngle]} m={wood.rails} />
-
+            </>
+          )}
           {/* Side stiles run the height of the panel only */}
           <Box p={[-leafW / 2 + 0.16, panelH / 2, front]} s={[0.28, panelH, 0.12]} m={wood.rails} />
           <Box p={[leafW / 2 - 0.16, panelH / 2, front]} s={[0.28, panelH, 0.12]} m={wood.rails} />
@@ -828,6 +905,109 @@ function TrainingArea() {
   )
 }
 
+// The crown room past the last door: dim blue cell-block walls with a dark
+// wainscot, barred windows and lamps up high, two columns by the entrance,
+// a locker and a crate pile at the back (both in data/room.js), and the
+// crown spinning over its pedestal in the middle.
+const RW = WIN_ROOM.halfWidth
+const RH = WIN_ROOM.height
+const RD = WIN_ROOM.maxZ - WIN_ROOM.minZ
+const RMID = (WIN_ROOM.minZ + WIN_ROOM.maxZ) / 2
+const LOW_H = 2.4 // wainscot height
+
+function CrownRoom() {
+  const m = materials()
+  const sideW = RW - HW // south wall either side of the corridor mouth
+  const sideWindowsZ = [WIN_ROOM.maxZ - 8, RMID, WIN_ROOM.minZ + 6]
+  return (
+    <group name="crown-room">
+      {/* Shell: side walls, back wall, south wall round the corridor mouth, ceiling */}
+      {[-1, 1].map((side) => (
+        <group key={side}>
+          <Box p={[side * (RW + T / 2), RH / 2, RMID]} s={[T, RH, RD + 2 * T]} m={m.winWall} />
+          <Box p={[side * (RW - 0.06), LOW_H / 2, RMID]} s={[0.12, LOW_H, RD]} m={m.winWallLow} />
+          <Box p={[side * (RW - 0.1), LOW_H, RMID]} s={[0.2, 0.14, RD]} m={m.winTrim} />
+          <Box p={[side * (HW + sideW / 2), RH / 2, WIN_ROOM.maxZ + T / 2]} s={[sideW, RH, T]} m={m.winWall} />
+          <Box p={[side * (HW + sideW / 2), LOW_H / 2, WIN_ROOM.maxZ - 0.06]} s={[sideW, LOW_H, 0.12]} m={m.winWallLow} />
+          <Box p={[side * (HW + sideW / 2), LOW_H, WIN_ROOM.maxZ - 0.1]} s={[sideW, 0.14, 0.2]} m={m.winTrim} />
+          {sideWindowsZ.map((z) => (
+            <mesh key={z} geometry={PLANE} material={m.winWindow} position={[side * (RW - 0.02), 6, z]} scale={[1.8, 1.3, 1]} rotation={[0, -side * (Math.PI / 2), 0]} />
+          ))}
+        </group>
+      ))}
+      <Box p={[0, (RH + CH) / 2, WIN_ROOM.maxZ + T / 2]} s={[2 * HW, RH - CH, T]} m={m.winWall} />
+      <Box p={[0, RH / 2, WIN_ROOM.minZ - T / 2]} s={[2 * RW + 2 * T, RH, T]} m={m.winWall} />
+      <Box p={[0, LOW_H / 2, WIN_ROOM.minZ + 0.06]} s={[2 * RW, LOW_H, 0.12]} m={m.winWallLow} />
+      <Box p={[0, LOW_H, WIN_ROOM.minZ + 0.1]} s={[2 * RW, 0.14, 0.2]} m={m.winTrim} />
+      <FloorDecal x={0} z={RMID} w={2 * RW} d={RD} m={m.winFloor} />
+      <Box p={[0, RH + 0.25, RMID]} s={[2 * RW + 2 * T, 0.5, RD + 2 * T]} m={m.winCeiling} />
+      <Box p={[0, RH - 0.3, RMID]} s={[2 * RW, 0.6, 0.12]} m={m.winTrim} />
+
+      {/* Back wall: barred windows at the ends, two lamps in between */}
+      {[-9.5, 9.5].map((x) => (
+        <mesh key={x} geometry={PLANE} material={m.winWindow} position={[x, 6, WIN_ROOM.minZ + 0.02]} scale={[1.8, 1.3, 1]} />
+      ))}
+      {[-4, 4].map((x) => (
+        <group key={x} position={[x, 5.4, WIN_ROOM.minZ + 0.12]}>
+          <Box p={[0, 0, 0]} s={[2, 0.8, 0.2]} m={m.lampHousing} />
+          <mesh geometry={PLANE} material={m.light} position={[0, 0, 0.11]} scale={[1.8, 0.6, 1]} />
+        </group>
+      ))}
+
+      {WIN_PILLARS.map((p, i) => (
+        <mesh key={i} geometry={PIPE} material={m.winPillar} position={[p.x, RH / 2, p.z]} scale={[p.r, RH, p.r]} castShadow receiveShadow />
+      ))}
+
+      {/* Tiered pedestal with a glowing rim */}
+      <group position={[CROWN.x, 0, CROWN.z]}>
+        <mesh geometry={DISC} material={m.pedestalBase} position={[0, CROWN.pedestalHeight / 4, 0]} scale={[CROWN.pedestalRadius, CROWN.pedestalHeight / 2, CROWN.pedestalRadius]} receiveShadow />
+        <mesh geometry={DISC} material={m.pedestalGlow} position={[0, CROWN.pedestalHeight / 2 + 0.01, 0]} scale={[CROWN.pedestalRadius * 0.86, 0.04, CROWN.pedestalRadius * 0.86]} />
+        <mesh geometry={DISC} material={m.pedestalBase} position={[0, CROWN.pedestalHeight * 0.75, 0]} scale={[CROWN.pedestalRadius * 0.78, CROWN.pedestalHeight / 2, CROWN.pedestalRadius * 0.78]} receiveShadow />
+        <Crown />
+      </group>
+    </group>
+  )
+}
+
+// Gold crown: a flared band with spikes, a gem on each spike's tip and a row
+// of gems round the band. Bobs and spins.
+const CROWN_SPIKES = 8
+const CROWN_GEMS = ['gemRed', 'gemBlue', 'gemGreen', 'gemBlue']
+function Crown() {
+  const m = materials()
+  const ref = useRef()
+  useFrame(({ clock }) => {
+    if (!ref.current) return
+    ref.current.rotation.y = clock.elapsedTime * 0.8
+    ref.current.position.y = CROWN.y + Math.sin(clock.elapsedTime * 1.6) * 0.12
+  })
+  return (
+    <group ref={ref} position={[0, CROWN.y, 0]} scale={1.35}>
+      <mesh material={m.crownGold} castShadow>
+        <cylinderGeometry args={[0.62, 0.5, 0.36, 32, 1, true]} />
+      </mesh>
+      <mesh material={m.crownGold} position={[0, -0.17, 0]} rotation={[Math.PI / 2, 0, 0]}>
+        <torusGeometry args={[0.51, 0.045, 8, 32]} />
+      </mesh>
+      {Array.from({ length: CROWN_SPIKES }, (_, i) => {
+        const a = (i / CROWN_SPIKES) * Math.PI * 2
+        const x = Math.sin(a)
+        const z = Math.cos(a)
+        return (
+          <group key={i}>
+            <mesh material={m.crownGold} position={[x * 0.6, 0.36, z * 0.6]} rotation={[z * 0.25, 0, -x * 0.25]}>
+              <coneGeometry args={[0.11, 0.38, 4]} />
+            </mesh>
+            <mesh geometry={SPHERE} material={m.gemBlue} position={[x * 0.65, 0.57, z * 0.65]} scale={0.05} />
+            <mesh geometry={SPHERE} material={m[CROWN_GEMS[i % CROWN_GEMS.length]]} position={[x * 0.57, 0, z * 0.57]} scale={[0.07, 0.09, 0.07]} />
+          </group>
+        )
+      })}
+      <pointLight color="#ffd45a" intensity={6} distance={7} decay={1.6} position={[0, 0.3, 0]} />
+    </group>
+  )
+}
+
 export default function Room() {
   return (
     <group name="room">
@@ -838,6 +1018,7 @@ export default function Room() {
       {DOORS.map((d, i) => (
         <Door key={d.z} z={d.z} index={i} />
       ))}
+      <CrownRoom />
       <TrainingArea />
       <Tables />
       <Lockers />

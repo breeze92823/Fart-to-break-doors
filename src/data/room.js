@@ -1,4 +1,4 @@
-import { CORRIDOR, DOOR, HALL } from './world.js'
+import { CORRIDOR, DOOR, HALL, WIN_ROOM } from './world.js'
 
 // Layout of the prison-cafeteria hall: every prop's placement lives here so
 // components/Room.jsx (drawing) and systems/playerMovement.js (collision)
@@ -33,6 +33,8 @@ export const LOCKER_BANKS = [
   { x: -13.5, z: HALL.minZ + LOCKER.depth / 2, count: 8, facing: 0 },
   { x: HALL.minX + LOCKER.depth / 2, z: -6, count: 5, facing: Math.PI / 2 },
   { x: HALL.maxX - LOCKER.depth / 2, z: -5.5, count: 7, facing: -Math.PI / 2 },
+  // Crown room, left of the back wall.
+  { x: -6.8, z: WIN_ROOM.minZ + LOCKER.depth / 2, count: 2, facing: 0 },
 ]
 
 // Wooden crates, `level` stacks them (0 = on the floor).
@@ -49,7 +51,26 @@ export const CRATES = [
   { x: 24.6, z: 4.9, size: 1.3, level: 1, rot: -0.1 },
   { x: -24.6, z: 28.9, size: 1.3, level: 0, rot: 0.2 },
   { x: -23.2, z: 28.9, size: 1.3, level: 0, rot: 0 },
+  // Crown room: a low pile right of the back wall.
+  { x: 4.6, z: WIN_ROOM.minZ + 1.6, size: 1, level: 0, rot: 0.1 },
+  { x: 5.7, z: WIN_ROOM.minZ + 1.2, size: 1.2, level: 0, rot: -0.05 },
+  { x: 7, z: WIN_ROOM.minZ + 1.5, size: 1.2, level: 0, rot: 0.2 },
+  { x: 8.3, z: WIN_ROOM.minZ + 1.2, size: 1, level: 0, rot: 0 },
+  { x: 6.2, z: WIN_ROOM.minZ + 2.6, size: 0.9, level: 0, rot: -0.15 },
+  { x: 8.2, z: WIN_ROOM.minZ + 2.5, size: 0.9, level: 0, rot: 0.1 },
+  { x: 5.8, z: WIN_ROOM.minZ + 1.2, size: 1.2, level: 1, rot: 0.1 },
+  { x: 7, z: WIN_ROOM.minZ + 1.5, size: 1.2, level: 1, rot: -0.1 },
 ]
+
+// Crown room fixtures. The crown floats and spins over a tiered round pedestal.
+export const CROWN = { x: 0, z: WIN_ROOM.maxZ - 15, pedestalRadius: 1.7, pedestalHeight: 0.3, y: 1.6 }
+// Round columns: two near the entrance against the side walls, a slim pipe on the back wall.
+export const WIN_PILLARS = [
+  { x: -(WIN_ROOM.halfWidth - 1.2), z: WIN_ROOM.maxZ - 5, r: 0.45 },
+  { x: WIN_ROOM.halfWidth - 1.2, z: WIN_ROOM.maxZ - 5, r: 0.45 },
+  { x: -0.9, z: WIN_ROOM.minZ + 0.3, r: 0.18 },
+]
+
 
 // Egg shop along the west wall: a dark mat with one pedestal per egg tier,
 // cheapest at the door end. `size` scales the egg; `gems` prices it in the
@@ -75,10 +96,55 @@ export const BUY_PADS = [
 // `cash` is paid to the player when that door breaks.
 export const DOOR_TAGS = [
   [20, 5],
-  [50, 8],
-  [100, 12],
-  [200, 19],
-  [400, 25],
+  [30, 8],
+  [50, 12],
+  [80, 16],
+  [120, 21],
+  [190, 27],
+  [300, 34],
+  [480, 42],
+  [750, 52],
+  [1200, 64],
+  [1900, 78],
+  [2900, 95],
+  [4600, 115],
+  [7200, 140],
+  [11500, 170],
+  [18000, 200],
+  [28000, 235],
+  [44500, 275],
+  [70000, 320],
+  [110000, 370],
+  [150000, 425],
+  [200000, 490],
+  [265000, 560],
+  [350000, 640],
+  [465000, 730],
+  [620000, 830],
+  [830000, 940],
+  [1060000, 1060],
+  [1350000, 1190],
+  [1720000, 1330],
+  [2200000, 1480],
+  [2800000, 1640],
+  [3350000, 1810],
+  [4000000, 2000],
+  [4800000, 2200],
+  [5800000, 2400],
+  [6900000, 2620],
+  [8300000, 2850],
+  [10000000, 3100],
+  [11500000, 3370],
+  [13000000, 3650],
+  [15000000, 3950],
+  [16600000, 4270],
+  [18400000, 4600],
+  [20400000, 4950],
+  [22600000, 5300],
+  [25000000, 5650],
+  [28000000, 6000],
+  [31000000, 6400],
+  [34500000, 6800],
 ].map(([hp, cash], i) => ({ level: i + 1, hp, max: hp, cash, y: 1.6 }))
 export const SPIN_PAD = { x: 19.8, z: -4.6, radius: 2, reward: 'x3' }
 export const OFFLINE_SIGN = { x: 23.2, z: -0.4, facing: -Math.PI / 2 }
@@ -136,6 +202,16 @@ function buildColliders() {
   const northMinZ = DOOR.z - 4
   out.push(span(HALL.minX - 2, -CORRIDOR.halfWidth, northMinZ, HALL.minZ, HALL.height))
   out.push(span(CORRIDOR.halfWidth, HALL.maxX + 2, northMinZ, HALL.minZ, HALL.height))
+  // Corridor walls down to the crown room; their north faces are the room's south wall.
+  const RW = WIN_ROOM.halfWidth
+  out.push(span(-RW - 2, -CORRIDOR.halfWidth, WIN_ROOM.maxZ, northMinZ, HALL.height))
+  out.push(span(CORRIDOR.halfWidth, RW + 2, WIN_ROOM.maxZ, northMinZ, HALL.height))
+  // Crown room side and back walls.
+  out.push(span(-RW - 2, -RW, WIN_ROOM.minZ - 2, WIN_ROOM.maxZ, WIN_ROOM.height))
+  out.push(span(RW, RW + 2, WIN_ROOM.minZ - 2, WIN_ROOM.maxZ, WIN_ROOM.height))
+  out.push(span(-RW, RW, WIN_ROOM.minZ - 2, WIN_ROOM.minZ, WIN_ROOM.height))
+  out.push(box(CROWN.x, CROWN.z, 2 * CROWN.pedestalRadius, 2 * CROWN.pedestalRadius, CROWN.pedestalHeight))
+  for (const p of WIN_PILLARS) out.push(box(p.x, p.z, 2 * p.r, 2 * p.r, WIN_ROOM.height))
 
   for (const t of TABLES) {
     // A quarter-turned table swaps its X and Z extents.

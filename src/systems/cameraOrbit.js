@@ -1,7 +1,7 @@
 import { inputState } from './input.js'
 import { player } from './playerState.js'
 import { barrierZ } from './doors.js'
-import { CORRIDOR, GROUND_Y, HALL } from '../data/world.js'
+import { CORRIDOR, GROUND_Y, HALL, WIN_ROOM } from '../data/world.js'
 
 // Third-person follow with right-drag orbit + wheel zoom. Position and
 // look-at ease at different rates so the rig reads as a follow cam rather
@@ -24,8 +24,17 @@ const WALL_MARGIN = 0.5 // m the camera stays off walls
 const ROOF_CLEARANCE = 1.8 // m below the hall ceiling, clear of the girders
 
 // Keeps a camera position inside the hall, or inside the corridor while
-// it's in line with the corridor mouth.
+// it's in line with the corridor mouth, or inside the crown room once the
+// player is in it.
 function clampToInterior(pos) {
+  if (player.position.z < WIN_ROOM.maxZ) {
+    pos.z = Math.max(pos.z, WIN_ROOM.minZ + WALL_MARGIN)
+    const halfW = pos.z < WIN_ROOM.maxZ - WALL_MARGIN ? WIN_ROOM.halfWidth : CORRIDOR.halfWidth
+    pos.x = Math.min(Math.max(pos.x, -halfW + WALL_MARGIN), halfW - WALL_MARGIN)
+    const roof = (pos.z < WIN_ROOM.maxZ ? WIN_ROOM.height : CORRIDOR.height) - WALL_MARGIN
+    if (pos.y > roof) pos.y = roof
+    return
+  }
   pos.x = Math.min(Math.max(pos.x, HALL.minX + WALL_MARGIN), HALL.maxX - WALL_MARGIN)
   const inCorridorLine = Math.abs(pos.x) < CORRIDOR.halfWidth - WALL_MARGIN
   const minZ = inCorridorLine ? barrierZ() + WALL_MARGIN : HALL.minZ + WALL_MARGIN

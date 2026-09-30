@@ -637,3 +637,28 @@
   font-size: calc(48 * var(--u));
   white-space: nowrap;
 }
+
+/* ---------- Back button (bottom centre, door area only) ---------- */
+.back-btn {
+  position: absolute;
+  left: 50%;
+  bottom: calc(60 * var(--u));
+  transform: translateX(-50%);
+  width: calc(300 * var(--u));
+  height: calc(110 * var(--u));
+  border-radius: calc(26 * var(--u));
+  border: calc(7 * var(--u)) solid var(--outline);
+  background: linear-gradient(180deg, #ff2a2a 0%, #d3103a 55%, #c40f8a 100%);
+  box-shadow: inset 0 calc(6 * var(--u)) 0 rgba(255, 255, 255, 0.35);
+  font-size: calc(64 * var(--u));
+  letter-spacing: calc(2 * var(--u));
+  pointer-events: auto;
+  cursor: pointer;
+  transition: transform 0.1s;
+}
+.back-btn:hover {
+  transform: translateX(-50%) scale(1.06);
+}
+.back-btn:active {
+  transform: translateX(-50%) scale(0.96);
+}

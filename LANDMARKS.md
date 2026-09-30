@@ -48,8 +48,10 @@ Name is what to call it. Source is the constant that places it (`room.js` unless
 | `CORRIDOR` | x ±4, z −45.5 … −9.5, ceiling 6 | Passage north from the hall's middle, ends at the door | `world.js` `CORRIDOR` |
 | `CORRIDOR-MOUTH` | z −9.5, x ±4 | Chunky portal frame where the corridor meets the hall | `Room.jsx` `Corridor` |
 | `DOOR` | z −11 (south face), 4.4 m tall, 0.35 m thick | The breakable wooden double gate: solid planked lower panel with an X brace, open above it. Scene groups: `door`, `door-left`, `door-right` | `world.js` `DOOR` |
-| `DOOR-2` … `DOOR-5` | z −16.5, −22, −27.5, −33 (5.5 m apart, behind `DOOR`) | Same gate design, seen through the open space above the door in front. Not reachable yet: the player stops at `DOOR` | `world.js` `DOORS` |
-| `DOOR-TAG` | 1.4 m south of each door, y 1.6 | Floating "Level: N" and health bar (20, 60, 150, 400, 1000) | `DOOR_TAGS` |
+| `DOOR-2` … `DOOR-50` | z −16.5, −22, …, −280.5 (doors 1–5 wood, 6–10 grey stone, 11–15 rusty metal, 16–20 navy glass gate, 21–25 riveted blue steel, 26–30 teal diamond-plate, 31–35 purple plate with hazard posts, 36–40 black emblem gate, 41–45 gold vault, 46–50 ice-blue vault) (5.5 m apart, behind `DOOR`) | Same gate design, seen through the open space above the door in front. Not reachable yet: the player stops at `DOOR` | `world.js` `DOORS` |
+| `DOOR-TAG` | 1.4 m south of each door, y 1.6 | Floating "Level: N" and health bar (20 → 34.5M over 50 doors) | `DOOR_TAGS` |
+| `CROWN-ROOM` | x −14…14, z −293…−319, 9 m high | Room the corridor opens into after `DOOR-50`: barred windows, back-wall lamps, two columns by the entrance, a locker and crate pile at the back | `world.js` `WIN_ROOM` |
+| `CROWN` | x 0, z −308 | Gold crown spinning over a tiered pedestal in the middle of `CROWN-ROOM` (display only) | `room.js` `CROWN` |
 | `HAZARD-STRIP` | z ≈ −10.55, across the corridor | Yellow/black stripe at the door threshold | `Room.jsx` `Corridor` |
 | `CHEVRONS` | z ≈ −6.8, x ±2.6 | Glowing orange arrows on the floor pointing at the door | `Room.jsx` `Corridor` |
 | `FOOD-PAD` | (−14, −4.4), radius 2.1 | BUY pad, floating bread, "NEXT FOOD: $3.5K" | `BUY_PADS` (id `food`) |

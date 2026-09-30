@@ -3,6 +3,7 @@ import { useFrame } from '@react-three/fiber'
 import { AdditiveBlending, CanvasTexture, DoubleSide, Group, Mesh, MeshBasicMaterial, PlaneGeometry, Sprite, SpriteMaterial } from 'three'
 import { doorHits } from '../systems/doors.js'
 import { DOORS, CORRIDOR, GROUND_Y } from '../data/world.js'
+import { formatShort } from '../utils/format.js'
 
 const POOL = 4
 const BURST_LIFE = 0.35 // s the central flash lasts
@@ -102,10 +103,12 @@ function drawDamage(canvas, damage) {
   ctx.lineJoin = 'round'
   ctx.lineWidth = 16
   ctx.strokeStyle = '#3a1830'
-  const text = `-${Math.round(damage)}`
-  ctx.strokeText(text, canvas.width / 2, canvas.height / 2)
+  const text = `-${formatShort(damage)}`
+  // Squeeze long values ("-1.08Qa") into the canvas, clear of the outline.
+  const maxWidth = canvas.width - 32
+  ctx.strokeText(text, canvas.width / 2, canvas.height / 2, maxWidth)
   ctx.fillStyle = '#ff4f8b'
-  ctx.fillText(text, canvas.width / 2, canvas.height / 2)
+  ctx.fillText(text, canvas.width / 2, canvas.height / 2, maxWidth)
 }
 
 const sprite = (map, order, additive = false) => {
