@@ -1,4 +1,4 @@
-import { useMemo, useRef } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
 import {
   AdditiveBlending,
@@ -14,6 +14,7 @@ import {
 import { CORRIDOR, DOOR, DOORS, HALL, WIN_ROOM } from '../data/world.js'
 import { doorAnim, DOOR_OPEN_ANGLE } from '../systems/doors.js'
 import { useGameStore } from '../store/useGameStore.js'
+import { subscribeLeaderboard } from '../systems/net.js'
 import {
   BENCH,
   BUY_PADS,
@@ -63,7 +64,7 @@ import {
   eggTexture,
   glowCurtainTexture,
   hazardTexture,
-  leaderboardTexture,
+  createLeaderboardBoard,
   lightPanelTexture,
   lockerTexture,
   offlineSignTexture,
@@ -630,9 +631,11 @@ function FloatingItem({ item, y }) {
 
 function DoorTags() {
   const doorHp = useGameStore((s) => s.doorHp)
+  // Only the two nearest unbroken doors get a tag; the next appears as one breaks.
+  const first = doorHp.findIndex((hp) => hp > 0)
   return DOORS.map((d, i) => {
     const t = { ...DOOR_TAGS[i], hp: doorHp[i] }
-    if (t.hp <= 0) return null
+    if (t.hp <= 0 || first < 0 || i > first + 1) return null
     return (
       <sprite
         key={d.z}
@@ -827,6 +830,17 @@ function signMaterial(key, texture) {
   return signMats.get(key)
 }
 
+// One live board: repaints its canvas whenever the server pushes new rows.
+function LeaderboardScreen({ l, bw, lh }) {
+  const board = useMemo(() => createLeaderboardBoard(l.header), [l.header])
+  const material = useMemo(
+    () => new MeshBasicMaterial({ map: board.texture, transparent: true, depthWrite: false, toneMapped: false }),
+    [board],
+  )
+  useEffect(() => subscribeLeaderboard((data, selfId) => board.update(data[l.stat], selfId)), [board, l.stat])
+  return <mesh geometry={PLANE} material={material} position={[0, lh * 0.55, 0.11]} scale={[bw - 0.2, lh * 0.8 - 0.2, 1]} />
+}
+
 function Leaderboards() {
   const m = materials()
   const { width: bw, pillar: p, height: lh } = LEADERBOARD
@@ -842,12 +856,7 @@ function Leaderboards() {
             </group>
           ))}
           <Box p={[0, lh * 0.55, -0.05]} s={[bw, lh * 0.8, 0.3]} m={m.stone} />
-          <mesh
-            geometry={PLANE}
-            material={signMaterial(`board:${l.header}`, leaderboardTexture(l.header))}
-            position={[0, lh * 0.55, 0.11]}
-            scale={[bw - 0.2, lh * 0.8 - 0.2, 1]}
-          />
+          <LeaderboardScreen l={l} bw={bw} lh={lh} />
           <mesh
             geometry={PLANE}
             material={signMaterial(`title:${l.title}`, signTexture(l.title, { fill: '#8fd0ff', fill2: '#2f7fe0', stroke: '#0d2350' }))}

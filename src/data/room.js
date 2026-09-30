@@ -173,8 +173,8 @@ export const SINK = { x: 7, z: HALL.minZ + 0.45 }
 // Leaderboard stands against the east wall beside the training area,
 // facing west into the hall (`facing` is the yaw their fronts face).
 export const LEADERBOARDS = [
-  { x: HALL.maxX - 1.6, z: 9, facing: -Math.PI / 2, title: 'REBIRTHS', header: 'REBIRTH LEADERBOARD' },
-  { x: HALL.maxX - 1.6, z: 17.5, facing: -Math.PI / 2, title: 'FART POWER', header: 'FART POWER LEADERBOARD' },
+  { x: HALL.maxX - 1.6, z: 9, facing: -Math.PI / 2, title: 'REBIRTHS', stat: 'rebirths', header: 'REBIRTH LEADERBOARD' },
+  { x: HALL.maxX - 1.6, z: 17.5, facing: -Math.PI / 2, title: 'FART POWER', stat: 'fartPower', header: 'FART POWER LEADERBOARD' },
 ]
 export const LEADERBOARD = { width: 5.2, pillar: 1, height: 5.2 }
 

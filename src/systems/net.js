@@ -87,6 +87,29 @@ export function subscribeRoster(onAdd, onRemove) {
   return () => rosterListeners.delete(entry)
 }
 
+// --- Leaderboards -----------------------------------------------------------
+// Server push: { rebirths|fartPower|...: [{ id, name, value }] }, best first.
+// `id` equals our sessionId on our own row, so a board can highlight it.
+let lastLeaderboard = null
+const leaderboardListeners = new Set()
+
+function emitLeaderboard() {
+  for (const fn of leaderboardListeners) {
+    try {
+      fn(lastLeaderboard || {}, selfId)
+    } catch {
+      // A broken subscriber must not wedge the netcode.
+    }
+  }
+}
+
+// Replays the latest payload immediately if one has already arrived.
+export function subscribeLeaderboard(fn) {
+  leaderboardListeners.add(fn)
+  if (lastLeaderboard) fn(lastLeaderboard, selfId)
+  return () => leaderboardListeners.delete(fn)
+}
+
 // --- Connection state -------------------------------------------------------
 let sdkModule = null
 let client = null
@@ -322,7 +345,10 @@ function attachRoom(joined) {
   // Server pushes we don't consume yet; registering silences the SDK warning.
   room.onMessage('progress', () => {})
   room.onMessage('noProgress', () => {})
-  room.onMessage('leaderboard', () => {})
+  room.onMessage('leaderboard', (data) => {
+    lastLeaderboard = data || {}
+    emitLeaderboard()
+  })
 
   // Called unconditionally: room.state can still be an empty shell right
   // after joinOrCreate() resolves, and getStateCallbacks() defers registration

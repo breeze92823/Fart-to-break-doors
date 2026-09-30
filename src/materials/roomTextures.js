@@ -638,9 +638,20 @@ export function signTexture(text, { fill = '#ffd21f', fill2 = '#ffb300', stroke 
   })
 }
 
-// Leaderboard screen: header plus eight empty rank rows.
-export function leaderboardTexture(header) {
-  return make(`board:${header}`, 512, 400, (ctx, w, h) => {
+// Leaderboard screen: header plus eight rank rows. Uncached and repainted in
+// place: `update(rows, selfId)` takes [{ id, name, value }] best-first.
+export function createLeaderboardBoard(header) {
+  const w = 512
+  const h = 400
+  const canvas = document.createElement('canvas')
+  canvas.width = w
+  canvas.height = h
+  const ctx = canvas.getContext('2d')
+  const texture = new CanvasTexture(canvas)
+  texture.colorSpace = SRGBColorSpace
+  texture.anisotropy = 8
+
+  function update(rows = [], selfId = '') {
     ctx.fillStyle = '#1f2c4a'
     ctx.fillRect(0, 0, w, h)
     ctx.fillStyle = '#2f4675'
@@ -650,22 +661,38 @@ export function leaderboardTexture(header) {
     ctx.textAlign = 'center'
     ctx.textBaseline = 'middle'
     ctx.fillText(header, w / 2, 23)
-    ctx.textAlign = 'left'
     ctx.font = 'bold 20px Arial, sans-serif'
     for (let i = 0; i < 8; i++) {
       const y = 54 + i * 43
-      ctx.fillStyle = i % 2 ? '#26365a' : '#2b3d66'
+      const row = rows[i]
+      const me = row && row.id === selfId
+      ctx.fillStyle = me ? '#3d5a20' : i % 2 ? '#26365a' : '#2b3d66'
       ctx.fillRect(10, y, w - 20, 38)
+      ctx.textAlign = 'left'
       ctx.fillStyle = i < 3 ? ['#ffd24a', '#d9e2f0', '#e0975a'][i] : '#9fb2d6'
       ctx.fillText(`#${i + 1}`, 20, y + 20)
-      ctx.fillStyle = '#44587f'
+      ctx.fillStyle = row ? '#5f78ad' : '#44587f'
       ctx.beginPath()
       ctx.arc(80, y + 19, 13, 0, Math.PI * 2)
       ctx.fill()
-      ctx.fillStyle = '#6b7fa6'
-      ctx.fillText('- - -', 104, y + 20)
+      if (!row) {
+        ctx.fillStyle = '#6b7fa6'
+        ctx.fillText('- - -', 104, y + 20)
+        continue
+      }
+      ctx.fillStyle = me ? '#d9ff9a' : '#e8f0ff'
+      let name = String(row.name || 'Player')
+      while (name.length > 1 && ctx.measureText(name).width > 220) name = name.slice(0, -1)
+      ctx.fillText(name, 104, y + 20)
+      ctx.textAlign = 'right'
+      ctx.fillStyle = '#ffe27a'
+      ctx.fillText(formatShort(row.value), w - 22, y + 20)
     }
-  })
+    texture.needsUpdate = true
+  }
+
+  update()
+  return { texture, update }
 }
 
 // Egg skins for the shop, painted on an equirectangular canvas.
