@@ -24,11 +24,11 @@ The six values that make up a player's progress in Fart to Break Doors. **None o
 ## Rebirth
 - Integer count, starts at 0.
 - Resetting gives a permanent multiplier, so later runs progress faster.
-- What resets, what is kept, and the requirement to Rebirth are *TBD*.
+- Implemented (`data/rebirth.js`, `systems/rebirth.js`, `ui/RebirthWindow.jsx`, opened from the left menu): count 0 = Lv.1 / 1x; multiplier = count + 1, applied to door Cash and training Fart Power gain. Cost is Fart Power 5K, 10K, 20K, ... (5K * 2^count). A Rebirth resets Fart Power only; Cash, foods and farts are kept. The SKIP button is a placeholder.
 
 ## Training Foods
 - Each food has a price in Cash and a Fart Power gain.
-- The food list, prices and whether a food is owned or consumed on use are *TBD*.
+- Foods live in `data/foods.js` (placeholder prices/gains). Bought once with Cash, owned permanently, one equipped at a time; the equipped food adds its gain to Fart Power every 2 s while the player is in the TRAINING-PIT (`systems/foods.js`). Balance still *TBD*.
 
 ## Farts
 - Lifetime count, only goes up. Useful for stats and leaderboards.
@@ -42,7 +42,7 @@ The six values that make up a player's progress in Fart to Break Doors. **None o
 Slow-changing values belong in `store/useGameStore.js` (zustand), not in the per-frame `playerState.js`. A saved doc should be validated field by field when loaded:
 
 ```js
-{ cash: 0, fartPower: 1, rebirths: 0, trainingFoods: {/* foodId: count */}, farts: 0, wins: 0 }
+{ cash: 0, fartPower: 20, rebirths: 0, trainingFoods: {/* foodId: count */}, farts: 0, wins: 0 }
 ```
 
 ## Open questions

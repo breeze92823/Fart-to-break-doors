@@ -19,6 +19,7 @@ import { clone as cloneSkeleton } from 'three/examples/jsm/utils/SkeletonUtils.j
 import { MATERIAL_PBR } from '../data/materials.js'
 import { RIG_HEIGHT } from '../data/bloxity.js'
 import { player } from './playerState.js'
+import { attachBelly } from './belly.js'
 
 const SKIN = '#f2c79a'
 const SUIT = '#1d1e23'
@@ -126,7 +127,7 @@ export function buildDefaultCharacter() {
     if (o.name) root.nodes[o.name] = o
   })
   root.scale.setScalar(player.dims.height / RIG_HEIGHT)
-  return root
+  return attachBelly(root)
 }
 
 // The shared Bloxity default character, bundled in public/avatars/player.glb
@@ -151,7 +152,7 @@ export async function loadBaseCharacter() {
       if (o.name) root.nodes[o.name] = o
     })
     root.scale.setScalar(player.dims.height / RIG_HEIGHT)
-    return root
+    return attachBelly(root)
   } catch (err) {
     basePromise = null
     console.warn('[defaultCharacter] player.glb failed to load, using procedural character', err)

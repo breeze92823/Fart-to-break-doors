@@ -6,11 +6,18 @@ import { settings } from './systems/settingsState.js'
 import { useSettings } from './systems/bloxityHooks.js'
 import GameLoop from './components/GameLoop.jsx'
 import Ground from './components/Ground.jsx'
-import Sky from './components/Sky.jsx'
+import Room from './components/Room.jsx'
 import Lighting from './components/Lighting.jsx'
 import Player from './components/Player.jsx'
+import SeatedFood from './components/SeatedFood.jsx'
+import RemotePlayers from './components/RemotePlayers.jsx'
+import FartGas from './components/FartGas.jsx'
+import DoorHitFx from './components/DoorHitFx.jsx'
+import GuideArrows from './components/GuideArrows.jsx'
 
-const SKY = { top: '#6fbdf2', mid: '#b4def8', bottom: '#def0fb' }
+// Indoors: the hall is fully enclosed, so the clear colour only shows
+// through gaps; match it to the walls.
+const BACKGROUND = '#aabde2'
 
 // Rendered as the last child inside the Suspense boundary below, so it only
 // mounts once every suspending resource in the scene has resolved — the
@@ -38,19 +45,23 @@ export default function App() {
       shadows={preset.shadows && { type: PCFSoftShadowMap }}
       dpr={preset.dpr}
       gl={{ antialias: preset.antialias, powerPreference: 'high-performance', outputColorSpace: SRGBColorSpace }}
-      camera={{ fov: 60, near: 0.1, far: 600, position: [0, 8, 16] }}
+      camera={{ fov: 60, near: 0.1, far: 60, position: [0, 8, 16] }}
     >
-      <color attach="background" args={[SKY.bottom]} />
-      <fog attach="fog" args={[SKY.bottom, 120, 320]} />
-      <Sky colors={SKY} />
+      <color attach="background" args={[BACKGROUND]} />
       <Lighting />
 
       <GameLoop />
       <Suspense fallback={null}>
         <Ground />
+        <Room />
         <LoadingGate />
       </Suspense>
       <Player />
+      <SeatedFood />
+      <RemotePlayers />
+      <FartGas />
+      <DoorHitFx />
+      <GuideArrows />
     </Canvas>
   )
 }

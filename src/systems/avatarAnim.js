@@ -53,6 +53,9 @@ export function makeGait(built) {
     limbs: [],
     spine: null,
     spineBind: null,
+    neck: null,
+    neckBind: null,
+    eatTime: 0, // seconds seated, drives the eating loop
   }
 
   // --- Path 1: an embedded clip ------------------------------------------
@@ -82,13 +85,75 @@ export function makeGait(built) {
     gait.spine = spine
     gait.spineBind = spine.quaternion.clone()
   }
+  const neck = nodes.Neck1
+  if (neck) {
+    gait.neck = neck
+    gait.neckBind = neck.quaternion.clone()
+  }
   return gait
 }
 
 // speed01: horizontal speed / max move speed. Values outside 0..1 are
 // clamped. grounded (default true) gates the airborne pose below.
-export function updateGait(gait, dt, speed01, grounded = true) {
+// fart01: 0..1 fart-pose blend (systems/fart.js); layered over whatever pose
+// the base gait just wrote.
+export function updateGait(gait, dt, speed01, grounded = true, seated = false, fart01 = 0) {
   if (!gait || dt <= 0) return
+  baseGait(gait, dt, speed01, grounded, seated)
+  if (fart01 > 0 && !seated && !gait.mixer) applyFartPose(gait, fart01)
+}
+
+// Hunch forward with the butt out: the spine pitches forward (the belly hangs
+// with it), arms swing back, knees bend. Premultiplies onto the bone
+// quaternions the base gait set from bind this frame, so it never accumulates.
+function applyFartPose(gait, k) {
+  for (const limb of gait.limbs) {
+    gait.q.setFromAxisAngle(gait.axis, (limb.kind === 'leg' ? GAIT.fartLeg : GAIT.fartArm) * k)
+    limb.bone.quaternion.premultiply(gait.q)
+  }
+  if (gait.spine) {
+    gait.q.setFromAxisAngle(AXES.x, GAIT.fartLean * k)
+    gait.spine.quaternion.premultiply(gait.q)
+  }
+}
+
+function baseGait(gait, dt, speed01, grounded, seated) {
+
+  // Seated: thighs forward, and the player is training, so they wolf down
+  // their food: arms alternately shovel to the mouth, head and spine bob into
+  // each bite. Generated rig only; an embedded clip has no sit pose, so it
+  // just idles lowered onto the bench.
+  if (seated && !gait.mixer) {
+    gait.eatTime += dt
+    const w = gait.eatTime * GAIT.eatHz * Math.PI * 2
+    const bite = Math.sin(w) // -1..1, one bite per cycle
+    for (const limb of gait.limbs) {
+      let angle = GAIT.sitLeg
+      if (limb.kind === 'arm') {
+        // Arms alternate half a cycle apart; each lifts from rest to the mouth.
+        const lift = 0.5 + 0.5 * Math.sin(w + (limb.name === 'ArmL1' ? Math.PI : 0))
+        angle = GAIT.sitArm + (GAIT.eatArm - GAIT.sitArm) * lift
+      }
+      gait.q.setFromAxisAngle(gait.axis, angle)
+      limb.bone.quaternion.copy(limb.bind).premultiply(gait.q)
+    }
+    if (gait.spine) {
+      gait.q.setFromAxisAngle(AXES.x, GAIT.eatLean * (0.5 + 0.5 * bite))
+      gait.spine.quaternion.copy(gait.spineBind).premultiply(gait.q)
+    }
+    if (gait.neck) {
+      // Head dips into each bite, chews (fast small nod) and rocks side to side.
+      const chew = Math.sin(w * 2.5)
+      gait.q.setFromAxisAngle(AXES.x, GAIT.eatHead * bite + GAIT.eatChew * chew)
+      gait.neck.quaternion.copy(gait.neckBind).premultiply(gait.q)
+      gait.q.setFromAxisAngle(AXES.z, GAIT.eatTilt * Math.sin(w * 0.5))
+      gait.neck.quaternion.premultiply(gait.q)
+    }
+    gait.built.root.position.y = Math.abs(bite) * GAIT.eatBob
+    gait.amp = 0
+    return
+  }
+  gait.eatTime = 0
 
   const target = speed01 < 0 ? 0 : speed01 > 1 ? 1 : speed01
   // Exponential ease so a start or stop does not snap mid-stride.
@@ -177,5 +242,6 @@ export function disposeGait(gait) {
   }
   for (const limb of gait.limbs) limb.bone.quaternion.copy(limb.bind)
   if (gait.spine) gait.spine.quaternion.copy(gait.spineBind)
+  if (gait.neck) gait.neck.quaternion.copy(gait.neckBind)
   if (gait.built && gait.built.root) gait.built.root.position.y = 0
 }
