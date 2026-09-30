@@ -43,7 +43,7 @@ export default function App() {
       shadows={preset.shadows && { type: PCFSoftShadowMap }}
       dpr={preset.dpr}
       gl={{ antialias: preset.antialias, powerPreference: 'high-performance', outputColorSpace: SRGBColorSpace }}
-      camera={{ fov: 60, near: 0.1, far: 600, position: [0, 8, 16] }}
+      camera={{ fov: 60, near: 0.1, far: 60, position: [0, 8, 16] }}
     >
       <color attach="background" args={[BACKGROUND]} />
       <Lighting />
