@@ -1,5 +1,6 @@
 import { inputState } from './input.js'
 import { player } from './playerState.js'
+import { useGameStore } from '../store/useGameStore.js'
 
 // The fart action: a screen click makes the player hunch forward (`pose`,
 // eased 0..1, read by avatarAnim) while a burst of gas puffs is emitted from
@@ -43,7 +44,7 @@ export const fart = {
 
 // Everything that emits gas (components/FartGas.jsx): { fart, pos, facing,
 // carry }. `pos` is the feet position, `facing` the yaw the model faces
-// (gas leaves from behind it). Remote players add and remove their own.
+// (gas leaves from behind it), `type` a fart id (missing = the plain fart). Remote players add and remove their own.
 export const fartSources = new Set([
   {
     fart,
@@ -52,6 +53,10 @@ export const fartSources = new Set([
       return player.facing
     },
     carry: 0,
+    // The equipped fart type picks the gas look (data/farts.js).
+    get type() {
+      return useGameStore.getState().equippedFart
+    },
   },
 ])
 

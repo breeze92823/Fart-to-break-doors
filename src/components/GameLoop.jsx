@@ -3,6 +3,8 @@ import { step as stepPlayer } from '../systems/playerMovement.js'
 import { step as stepInteract } from '../systems/interact.js'
 import { step as stepFart } from '../systems/fart.js'
 import { step as stepDoors } from '../systems/doors.js'
+import { step as stepFoods } from '../systems/foods.js'
+import { step as stepFarts } from '../systems/farts.js'
 import { step as stepCashPopups } from '../systems/cashPopups.js'
 import { reportLocal } from '../systems/net.js'
 import { update as updateCamera } from '../systems/cameraOrbit.js'
@@ -24,6 +26,8 @@ export default function GameLoop() {
     stepInteract(dt)
     stepFart(dt)
     stepDoors(dt)
+    stepFoods(dt)
+    stepFarts()
     stepCashPopups(dt, camera)
     reportLocal(dt)
     updateCamera(camera, dt)

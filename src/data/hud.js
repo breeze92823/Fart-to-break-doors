@@ -32,3 +32,14 @@ export const REBIRTH_BANDS = [
   ['#ff1fd6', 0.78],
   ['#ff2323', 1],
 ]
+
+// Fart Power level: level N tops out at 50 * 2^(N-1) (1: 50, 2: 100, 3: 200, ...).
+export const levelMaxPower = (level) => 50 * 2 ** (level - 1)
+
+// { level, progress } for a Fart Power total; progress is 0..1 within the level.
+export function fartLevelInfo(power) {
+  let level = 1
+  while (power > levelMaxPower(level)) level++
+  const from = level === 1 ? 0 : levelMaxPower(level - 1)
+  return { level, progress: (power - from) / (levelMaxPower(level) - from) }
+}

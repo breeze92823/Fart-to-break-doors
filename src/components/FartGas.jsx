@@ -1,34 +1,22 @@
 import { useEffect, useMemo } from 'react'
 import { useFrame } from '@react-three/fiber'
-import { CanvasTexture, Group, Sprite, SpriteMaterial } from 'three'
+import { Group, Sprite, SpriteMaterial } from 'three'
 import { fartSources } from '../systems/fart.js'
+import { FARTS } from '../data/farts.js'
+import { makePuffTexture } from '../materials/fartTextures.js'
 
 const POOL = 90
 const EMIT_PER_SEC = 200
 const BUTT_HEIGHT = 0.85 // m above the feet
 const BUTT_BACK = 0.55 // m behind the player's centre (the belly sticks out the front)
 
-// Soft yellow puff: a radial gradient with a noisy edge.
-function makePuffTexture() {
-  const size = 128
-  const c = document.createElement('canvas')
-  c.width = c.height = size
-  const ctx = c.getContext('2d')
-  const g = ctx.createRadialGradient(size / 2, size / 2, 0, size / 2, size / 2, size / 2)
-  g.addColorStop(0, 'rgba(255,214,40,1)')
-  g.addColorStop(0.45, 'rgba(255,190,20,0.75)')
-  g.addColorStop(1, 'rgba(255,170,0,0)')
-  ctx.fillStyle = g
-  ctx.fillRect(0, 0, size, size)
-  return new CanvasTexture(c)
-}
-
 // The fart cloud: a pool of billboard puffs shot out of each farter's back
 // while systems/fart.js says a fart source (the local player or a remote one) is emitting. Each puff drifts back,
 // slows, swells and fades.
 export default function FartGas() {
-  const { root, puffs, texture } = useMemo(() => {
-    const texture = makePuffTexture()
+  const { root, puffs, textures } = useMemo(() => {
+    const textures = Object.fromEntries(FARTS.map((f) => [f.id, makePuffTexture(f.gas)]))
+    const texture = textures.fart
     const root = new Group()
     const puffs = []
     for (let i = 0; i < POOL; i += 1) {
@@ -38,15 +26,15 @@ export default function FartGas() {
       root.add(sprite)
       puffs.push({ sprite, vx: 0, vy: 0, vz: 0, age: 0, life: 1, size: 1, grow: 1, alive: false })
     }
-    return { root, puffs, texture }
+    return { root, puffs, textures }
   }, [])
 
   useEffect(
     () => () => {
       for (const p of puffs) p.sprite.material.dispose()
-      texture.dispose()
+      Object.values(textures).forEach((t) => t.dispose())
     },
-    [puffs, texture]
+    [puffs, textures]
   )
 
   useFrame((_s, delta) => {
@@ -78,6 +66,7 @@ export default function FartGas() {
           src.pos.y + BUTT_HEIGHT + (Math.random() - 0.5) * 0.2,
           src.pos.z + bz * BUTT_BACK + (Math.random() - 0.5) * 0.2
         )
+        p.sprite.material.map = textures[src.type] ?? textures.fart
         p.sprite.material.rotation = Math.random() * Math.PI * 2
         p.sprite.visible = true
       }

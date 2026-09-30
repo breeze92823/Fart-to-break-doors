@@ -5,6 +5,7 @@ import { useGameStore } from '../store/useGameStore.js'
 import { CORRIDOR, DOOR, DOORS, WIN_ROOM } from '../data/world.js'
 import { DOOR_TAGS } from '../data/room.js'
 import { spawnCashPopup } from './cashPopups.js'
+import { equippedFartStats } from './farts.js'
 
 // Door health and break animation. Each fart that lands while the player is
 // within DOOR_REACH of the first intact door takes Fart Power off its health;
@@ -53,10 +54,11 @@ function hitDoor() {
   const dz = player.position.z - DOORS[i].z
   if (dz < 0 || dz > DOOR_REACH || Math.abs(player.position.x) > CORRIDOR.halfWidth) return
   const { fartPower, doorHp } = useGameStore.getState()
+  const fart = equippedFartStats()
   // Power left over after a door breaks carries on to the next door, and so on.
   const hp = [...doorHp]
   let cash = 0
-  let left = fartPower
+  let left = fartPower * fart.power
   const broken = []
   for (let j = i; j < hp.length && left > 0; j += 1) {
     if (hp[j] <= 0) continue
@@ -67,12 +69,12 @@ function hitDoor() {
     doorAnim[j].flash = 1
     doorHits.push({ door: j, damage })
     if (hp[j] === 0) {
-      cash += DOOR_TAGS[j].cash
+      cash += Math.round(DOOR_TAGS[j].cash * fart.cash)
       broken.push(j)
     }
   }
   useGameStore.setState((s) => ({ doorHp: hp, cash: s.cash + cash }))
-  broken.forEach((j) => spawnCashPopup(DOOR_TAGS[j].cash))
+  broken.forEach((j) => spawnCashPopup(Math.round(DOOR_TAGS[j].cash * fart.cash)))
 }
 
 // Bumping into an intact door makes the player fart once; they must back off
@@ -123,6 +125,10 @@ export function step(dt) {
   if (wasInCorridor && !inCorridor) resetDoors()
   wasInCorridor = inCorridor
   if (useGameStore.getState().inDoorArea !== inCorridor) useGameStore.setState({ inDoorArea: inCorridor })
+  const i = firstIntactDoor()
+  const dz = i < 0 ? Infinity : player.position.z - DOORS[i].z
+  const near = dz >= 0 && dz <= DOOR_REACH && Math.abs(player.position.x) <= CORRIDOR.halfWidth
+  if (useGameStore.getState().nearDoor !== near) useGameStore.setState({ nearDoor: near })
 
   autoFartOnContact()
   autoBreakFart()

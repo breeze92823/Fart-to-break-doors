@@ -12,6 +12,7 @@ import Player from './components/Player.jsx'
 import RemotePlayers from './components/RemotePlayers.jsx'
 import FartGas from './components/FartGas.jsx'
 import DoorHitFx from './components/DoorHitFx.jsx'
+import GuideArrows from './components/GuideArrows.jsx'
 
 // Indoors: the hall is fully enclosed, so the clear colour only shows
 // through gaps; match it to the walls.
@@ -58,6 +59,7 @@ export default function App() {
       <RemotePlayers />
       <FartGas />
       <DoorHitFx />
+      <GuideArrows />
     </Canvas>
   )
 }

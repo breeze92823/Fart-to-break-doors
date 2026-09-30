@@ -17,8 +17,8 @@ function easeInCubic(p) {
 }
 
 // Screen centre of the HUD's Cash icon (top-left), where popups fly to.
-function cashTarget() {
-  const el = document.querySelector('.stat--cash .stat__icon')
+function cashTarget(emoji) {
+  const el = document.querySelector(emoji ? '.fart-bar__arrow' : '.stat--cash .stat__icon')
   if (!el) return { x: 60, y: 60 }
   const r = el.getBoundingClientRect()
   return { x: r.left + r.width / 2, y: r.top + r.height / 2 }
@@ -49,6 +49,10 @@ export default function CashPopups() {
 
         if (drawnSeq[i] !== slot.seq) {
           drawnSeq[i] = slot.seq
+          const [cashIcon, emojiIcon] = node.firstElementChild.children
+          cashIcon.style.display = slot.emoji ? 'none' : ''
+          emojiIcon.style.display = slot.emoji ? '' : 'none'
+          emojiIcon.textContent = slot.emoji ?? ''
           node.lastElementChild.textContent = `+${formatShort(slot.amount)}`
           node.style.display = ''
         }
@@ -64,7 +68,7 @@ export default function CashPopups() {
         const vh = window.innerHeight
         const startX = (slot.ndcX * 0.5 + 0.5) * vw
         const startY = (-(slot.ndcY + hop) * 0.5 + 0.5) * vh
-        const target = cashTarget()
+        const target = cashTarget(slot.emoji)
         const x = startX + (target.x - startX) * te
         const y = startY + (target.y - startY) * te
 
@@ -96,6 +100,7 @@ export default function CashPopups() {
     >
       <span className="cash-popup__icon">
         <CashIcon />
+        <span className="cash-popup__emoji" style={{ display: 'none' }} />
       </span>
       <span className="cash-popup__text stroke" />
     </div>

@@ -1,13 +1,17 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useGameStore } from '../store/useGameStore.js'
 import { login, showMenu, subscribeAuth } from '../systems/bloxity.js'
-import { resetPlayer } from '../systems/playerState.js'
-import { SPAWN, SPAWN_FACING } from '../data/world.js'
+import { player, resetPlayer } from '../systems/playerState.js'
+import { standUp } from '../systems/seat.js'
+import { CORRIDOR, SPAWN, SPAWN_FACING } from '../data/world.js'
 import { formatClock, formatShort } from '../utils/format.js'
-import { CUSTOM_SIZE_MAX, MENU_BUTTONS, OFFERS, REBIRTH_BANDS, STARTER_PACK_SECONDS } from '../data/hud.js'
+import { CUSTOM_SIZE_MAX, MENU_BUTTONS, fartLevelInfo, OFFERS, REBIRTH_BANDS, STARTER_PACK_SECONDS } from '../data/hud.js'
 import { ArrowIcon, CashIcon, GemIcon } from './icons.jsx'
 import InteractPrompt from './InteractPrompt.jsx'
 import CashPopups from './CashPopups.jsx'
+import FoodShop from './FoodShop.jsx'
+import FartShop from './FartShop.jsx'
+import TutorialBanner from './TutorialBanner.jsx'
 import './hud.css'
 
 // The 2D overlay above the canvas. Reads slow game state from the zustand
@@ -29,8 +33,7 @@ function RoundButton({ className = '', label, onClick, children }) {
 
 function FartPowerBar() {
   const fartPower = useGameStore((s) => s.fartPower)
-  const progress = useGameStore((s) => s.fartProgress)
-  const level = useGameStore((s) => s.fartLevel)
+  const { level, progress } = fartLevelInfo(fartPower)
   return (
     <div className="fart-bar">
       <div className="fart-bar__arrow">
@@ -200,15 +203,28 @@ function LeftColumn() {
   )
 }
 
+// The bar tracks how far down the corridor the player is: spawn (0%) to the
+// crown room at the end (100%). Written straight to the DOM each frame so it
+// doesn't re-render React.
 function RebirthBar() {
-  const progress = useGameStore((s) => s.rebirthProgress)
+  const markerRef = useRef(null)
+  useEffect(() => {
+    let raf = 0
+    const span = SPAWN.z - CORRIDOR.endZ
+    const tick = () => {
+      const t = Math.min(Math.max((SPAWN.z - player.position.z) / span, 0), 1)
+      if (markerRef.current) markerRef.current.style.left = `${t * 100}%`
+      raf = requestAnimationFrame(tick)
+    }
+    tick()
+    return () => cancelAnimationFrame(raf)
+  }, [])
   let from = 0
   const stops = REBIRTH_BANDS.map(([color, to]) => {
     const s = `${color} ${from * 100}% ${to * 100}%`
     from = to
     return s
   }).join(', ')
-  const at = Math.min(Math.max(progress, 0), 1) * 100
   return (
     <div className="rebirth-bar">
       <div className="rebirth-bar__track" style={{ background: `linear-gradient(90deg, ${stops})` }}>
@@ -218,7 +234,7 @@ function RebirthBar() {
           </span>
         ))}
       </div>
-      <div className="rebirth-bar__player" style={{ left: `${at}%` }}>
+      <div className="rebirth-bar__player" ref={markerRef} style={{ left: '0%' }}>
         <span className="rebirth-bar__avatar emoji">🙂</span>
         <span className="rebirth-bar__pointer" />
       </div>
@@ -261,18 +277,33 @@ function BackButton() {
   )
 }
 
+// Shown while sitting at a training table; stands the player back up.
+function StopButton() {
+  const seated = useGameStore((s) => s.seated)
+  if (!seated) return null
+  return (
+    <button type="button" className="back-btn stroke" onClick={standUp}>
+      STOP
+    </button>
+  )
+}
+
 export default function Hud() {
   return (
     <div className="hud">
       <LoginButton />
       <BackButton />
+      <StopButton />
       <FartPowerBar />
+      <TutorialBanner />
       <TopRow />
       <RightColumn />
       <LeftColumn />
       <RebirthBar />
       <InteractPrompt />
       <CashPopups />
+      <FoodShop />
+      <FartShop />
 
       <button type="button" className="corner corner--settings" aria-label="Settings" title="Settings" onClick={showMenu}>
         <span className="emoji">⚙️</span>

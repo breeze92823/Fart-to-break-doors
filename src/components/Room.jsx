@@ -15,6 +15,12 @@ import { CORRIDOR, DOOR, DOORS, HALL, WIN_ROOM } from '../data/world.js'
 import { doorAnim, DOOR_OPEN_ANGLE } from '../systems/doors.js'
 import { useGameStore } from '../store/useGameStore.js'
 import { subscribeLeaderboard } from '../systems/net.js'
+import { nextFood } from '../systems/foods.js'
+import { nextFart } from '../systems/farts.js'
+import { FART_BY_ID } from '../data/farts.js'
+import { makePuffTexture } from '../materials/fartTextures.js'
+import FoodModel from './FoodModels.jsx'
+import { formatShort } from '../utils/format.js'
 import {
   BENCH,
   BUY_PADS,
@@ -591,9 +597,15 @@ function spriteMaterial(key, texture) {
   return spriteMats.get(key)
 }
 
-// The thing a BUY pad sells, hovering over it: a bread loaf for food, a
-// brown gas puff for farts. Bobs and turns slowly.
-function FloatingItem({ item, y }) {
+// The thing a BUY pad sells, hovering over it: the next food's model, or the
+// next fart's gas puff (same shape and colour it leaves behind). Bobs and turns slowly.
+const fartPuffTextures = new Map()
+function fartPuffTexture(id) {
+  if (!fartPuffTextures.has(id)) fartPuffTextures.set(id, makePuffTexture(FART_BY_ID[id].gas))
+  return fartPuffTextures.get(id)
+}
+
+function FloatingItem({ item, y, foodId, fartId }) {
   const ref = useRef()
   useFrame(({ clock }) => {
     const g = ref.current
@@ -602,28 +614,12 @@ function FloatingItem({ item, y }) {
     g.position.y = y + Math.sin(t * 1.6) * 0.1
     g.rotation.y = t * 0.5
   })
-  const m = materials()
   return (
     <group ref={ref} position={[0, y, 0]}>
       {item === 'food' ? (
-        <group>
-          <mesh geometry={SPHERE} material={m.bread} scale={[1.5, 0.62, 0.8]} castShadow />
-          {[-0.7, 0, 0.7].map((x) => (
-            <mesh key={x} geometry={SPHERE} material={m.breadCut} position={[x, 0.5, 0]} scale={[0.32, 0.07, 0.1]} rotation={[0, 0, x * -0.4]} />
-          ))}
-        </group>
+        <FoodModel id={foodId} />
       ) : (
-        <group>
-          {[
-            [0, 0, 0, 0.75],
-            [0.6, -0.1, 0.2, 0.55],
-            [-0.6, -0.05, -0.1, 0.6],
-            [0.15, 0.4, -0.2, 0.5],
-            [-0.2, 0.35, 0.3, 0.45],
-          ].map(([x, yy, z, r], i) => (
-            <mesh key={i} geometry={SPHERE} material={m.gas} position={[x, yy, z]} scale={r} />
-          ))}
-        </group>
+        <sprite material={spriteMaterial(`fartItem:${fartId}`, fartPuffTexture(fartId))} scale={[2.6, 2.6, 1]} />
       )}
     </group>
   )
@@ -653,18 +649,29 @@ function ShopCorner() {
   const m = materials()
   const spin = SPIN_PAD
   const sign = OFFLINE_SIGN
+  const upcoming = nextFood(useGameStore((s) => s.ownedFoods))
+  const upcomingFart = nextFart(useGameStore((s) => s.ownedFarts))
   return (
     <group>
       {/* BUY pads: low white platform, the item floating above, price on top */}
-      {BUY_PADS.map((pad) => (
+      {BUY_PADS.map((shopPad) => {
+        // The food pad quotes the next food not owned yet.
+        const pad =
+          shopPad.id === 'food'
+            ? { ...shopPad, price: upcoming ? `$${formatShort(upcoming.price)}` : 'MAXED' }
+            : shopPad.id === 'fart'
+              ? { ...shopPad, price: upcomingFart ? `$${formatShort(upcomingFart.price)}` : 'MAXED' }
+              : shopPad
+        return (
         <group key={pad.id} position={[pad.x, 0, pad.z]}>
           <mesh geometry={DISC} material={m.padSnow} position={[0, 0.07, 0]} scale={[pad.radius, 0.14, pad.radius]} receiveShadow />
           <mesh geometry={DISC} material={m.pedestalBand} position={[0, 0.03, 0]} scale={[pad.radius * 1.04, 0.06, pad.radius * 1.04]} />
-          <FloatingItem item={pad.item} y={2.3} />
+          <FloatingItem item={pad.item} y={2.3} foodId={upcoming?.id ?? 'hotdog'} fartId={upcomingFart?.id ?? 'fire'} />
           <sprite material={spriteMaterial('buy', signTexture('BUY', { fill: '#8dff45', fill2: '#25b800', stroke: '#0b3d00', width: 512, height: 256 }))} position={[0, 0.95, 0]} scale={[2.6, 1.3, 1]} />
           <sprite material={spriteMaterial(`pad:${pad.label}:${pad.price}`, padLabelTexture(pad.label, pad.price))} position={[0, 3.9, 0]} scale={[2.9, 1.45, 1]} />
         </group>
-      ))}
+        )
+      })}
 
       {/* Spin pad: glowing green ring with the floating wheel above */}
       <group position={[spin.x, 0, spin.z]}>

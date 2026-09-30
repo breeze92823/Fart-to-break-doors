@@ -24,6 +24,7 @@ export const cashPopupPool = Array.from({ length: CASH_POPUP.poolSize }, () => (
   alive: false,
   age: 0,
   amount: 0,
+  emoji: null,
   ndcX: 0,
   ndcY: 0,
   seq: 0,
@@ -34,13 +35,16 @@ let spawnSeq = 0
 const playerNdc = { x: 0, y: 0 }
 const anchor = new THREE.Vector3()
 
-export function spawnCashPopup(amount) {
+// `emoji` swaps the Cash icon for that glyph and sends the popup to the Fart
+// Power bar instead (used by food training).
+export function spawnCashPopup(amount, emoji = null) {
   if (!(amount > 0)) return
   const slot = cashPopupPool[nextSlot]
   nextSlot = (nextSlot + 1) % CASH_POPUP.poolSize
   slot.alive = true
   slot.age = 0
   slot.amount = amount
+  slot.emoji = emoji
   slot.ndcX = playerNdc.x + (Math.random() * 2 - 1) * CASH_POPUP.spreadX
   slot.ndcY = playerNdc.y + (Math.random() * 2 - 1) * CASH_POPUP.spreadY
   slot.seq = ++spawnSeq

@@ -28,7 +28,7 @@ The six values that make up a player's progress in Fart to Break Doors. **None o
 
 ## Training Foods
 - Each food has a price in Cash and a Fart Power gain.
-- The food list, prices and whether a food is owned or consumed on use are *TBD*.
+- Foods live in `data/foods.js` (placeholder prices/gains). Bought once with Cash, owned permanently, one equipped at a time; the equipped food adds its gain to Fart Power every 2 s while the player is in the TRAINING-PIT (`systems/foods.js`). Balance still *TBD*.
 
 ## Farts
 - Lifetime count, only goes up. Useful for stats and leaderboards.

@@ -54,7 +54,7 @@ Name is what to call it. Source is the constant that places it (`room.js` unless
 | `CROWN` | x 0, z −308 | Gold crown spinning over a tiered pedestal in the middle of `CROWN-ROOM` (display only) | `room.js` `CROWN` |
 | `HAZARD-STRIP` | z ≈ −10.55, across the corridor | Yellow/black stripe at the door threshold | `Room.jsx` `Corridor` |
 | `CHEVRONS` | z ≈ −6.8, x ±2.6 | Glowing orange arrows on the floor pointing at the door | `Room.jsx` `Corridor` |
-| `FOOD-PAD` | (−14, −4.4), radius 2.1 | BUY pad, floating bread, "NEXT FOOD: $3.5K" | `BUY_PADS` (id `food`) |
+| `FOOD-PAD` | (−14, −4.4), radius 2.1 | BUY pad, floating bread, price of the next unowned food; walking up opens the Training Food window (`ui/FoodShop.jsx`) | `BUY_PADS` (id `food`) |
 | `FART-PAD` | (14, −4.4), radius 2.1 | BUY pad, floating gas puff, "NEXT FART: $10K" | `BUY_PADS` (id `fart`) |
 | `SPIN-PAD` | (19.8, −4.6), radius 2 | Glowing green ring, "FREE! x3" wheel above | `SPIN_PAD` |
 | `OFFLINE-SIGN` | (23.2, −0.4), faces west | Wooden signpost, "You earn Cash offline!" | `OFFLINE_SIGN` |
