@@ -3,8 +3,9 @@ import { player } from './playerState.js'
 import { getYaw } from './cameraOrbit.js'
 import { fart, FART } from './fart.js'
 import { stepSeated } from './seat.js'
-import { barrierZ } from './doors.js'
+import { barrierZ, autoBreakWish } from './doors.js'
 import { BOUNDS, GROUND_Y, PLAYER_MOVE_SPEED } from '../data/world.js'
+import { useGameStore } from '../store/useGameStore.js'
 import { COLLIDERS } from '../data/room.js'
 
 // Kinematic capsule, stepped once per frame: apply input -> gravity ->
@@ -84,6 +85,17 @@ export function step(dt) {
   const mv = farting ? { x: 0, z: 0 } : inputState.move
   let wishX = fwdX * mv.z + rightX * mv.x
   let wishZ = fwdZ * mv.z + rightZ * mv.x
+  // Auto Break walks the player to the next door; any movement key turns it off.
+  if ((inputState.move.x !== 0 || inputState.move.z !== 0) && useGameStore.getState().autoBreak) {
+    useGameStore.setState({ autoBreak: false })
+  }
+  if (!farting && mv.x === 0 && mv.z === 0) {
+    const auto = autoBreakWish()
+    if (auto) {
+      wishX = auto.x
+      wishZ = auto.z
+    }
+  }
   // Diagonals must not be faster than straight lines.
   const wishLen = Math.hypot(wishX, wishZ)
   if (wishLen > 1) {

@@ -1,4 +1,4 @@
-import { useRef } from 'react'
+import { useMemo, useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
 import {
   AdditiveBlending,
@@ -43,6 +43,7 @@ import {
 import {
   chevronTexture,
   crateTexture,
+  doorCrackTextures,
   doorPlankTexture,
   doorTagTexture,
   eggTexture,
@@ -376,12 +377,25 @@ function Door({ z, index }) {
   const rootRef = useRef()
   const leftRef = useRef()
   const rightRef = useRef()
+  // Own wood materials so a hit can tint this door red without touching the others.
+  const wood = useMemo(() => {
+    const planks = m.doorPlanks.clone()
+    const rails = m.doorWood.clone()
+    for (const x of [planks, rails]) x.emissive.set('#ff1a10')
+    return { planks, rails }
+  }, [m])
+  // Cracks appear below half health and pile on as it drops.
+  const crackMats = useMemo(() => doorCrackTextures().map((map) => new MeshBasicMaterial({ map, transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2 })), [])
+  const hpFrac = useGameStore((s) => s.doorHp[index] / DOOR_TAGS[index].max)
+  const crackStage = hpFrac >= 0.5 ? 0 : hpFrac >= 0.3 ? 1 : hpFrac >= 0.12 ? 2 : 3
   useFrame(({ clock }) => {
     const a = doorAnim[index]
     const angle = DOOR_OPEN_ANGLE * (1 - (1 - a.open) ** 3)
     if (leftRef.current) leftRef.current.rotation.y = angle
     if (rightRef.current) rightRef.current.rotation.y = -angle
     if (rootRef.current) rootRef.current.position.x = Math.sin(clock.elapsedTime * 70) * 0.06 * a.shake
+    wood.planks.emissiveIntensity = a.flash * 0.9
+    wood.rails.emissiveIntensity = a.flash * 0.9
   })
 
   return (
@@ -394,15 +408,20 @@ function Door({ z, index }) {
          {/* Hinged on the outer edge: the inner group re-centres the leaf on the pivot */}
          <group position={[-side * (leafW / 2), 0, 0]}>
           {/* Solid lower panel: planks, a base rail, a cap rail and an X brace */}
-          <Box p={[0, panelH / 2, 0]} s={[leafW - 0.04, panelH, t]} m={m.doorPlanks} cast />
-          <Box p={[0, 0.16, front]} s={[leafW - 0.04, 0.32, 0.12]} m={m.doorWood} cast />
-          <Box p={[0, panelH - 0.14, front]} s={[leafW - 0.04, 0.28, 0.12]} m={m.doorWood} cast />
-          <Box p={[0, (braceTop + braceBottom) / 2, front + 0.02]} s={[braceLen, 0.26, 0.1]} r={[0, 0, braceAngle]} m={m.doorWood} />
-          <Box p={[0, (braceTop + braceBottom) / 2, front + 0.02]} s={[braceLen, 0.26, 0.1]} r={[0, 0, -braceAngle]} m={m.doorWood} />
+          <Box p={[0, panelH / 2, 0]} s={[leafW - 0.04, panelH, t]} m={wood.planks} cast />
+          <Box p={[0, 0.16, front]} s={[leafW - 0.04, 0.32, 0.12]} m={wood.rails} cast />
+          <Box p={[0, panelH - 0.14, front]} s={[leafW - 0.04, 0.28, 0.12]} m={wood.rails} cast />
+          <Box p={[0, (braceTop + braceBottom) / 2, front + 0.02]} s={[braceLen, 0.26, 0.1]} r={[0, 0, braceAngle]} m={wood.rails} />
+          <Box p={[0, (braceTop + braceBottom) / 2, front + 0.02]} s={[braceLen, 0.26, 0.1]} r={[0, 0, -braceAngle]} m={wood.rails} />
 
           {/* Side stiles run the height of the panel only */}
-          <Box p={[-leafW / 2 + 0.16, panelH / 2, front]} s={[0.28, panelH, 0.12]} m={m.doorWood} />
-          <Box p={[leafW / 2 - 0.16, panelH / 2, front]} s={[0.28, panelH, 0.12]} m={m.doorWood} />
+          <Box p={[-leafW / 2 + 0.16, panelH / 2, front]} s={[0.28, panelH, 0.12]} m={wood.rails} />
+          <Box p={[leafW / 2 - 0.16, panelH / 2, front]} s={[0.28, panelH, 0.12]} m={wood.rails} />
+          {crackMats.map((cm, k) => (
+            <mesh key={k} visible={crackStage > k} position={[0, panelH / 2, front + 0.075 + k * 0.002]} material={cm} renderOrder={5 + k}>
+              <planeGeometry args={[leafW - 0.04, panelH]} />
+            </mesh>
+          ))}
          </group>
         </group>
       ))}

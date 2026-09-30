@@ -13,8 +13,9 @@ export const DOOR_REACH = 3.5 // m south of a door's face a fart still hits it
 export const DOOR_OPEN_ANGLE = 1.75 // rad each leaf swings when broken
 const OPEN_SPEED = 2.2 // 1/s
 const SHAKE_DECAY = 5 // 1/s
+const FLASH_DECAY = 3 // 1/s
 
-export const doorAnim = DOORS.map(() => ({ open: 0, shake: 0 }))
+export const doorAnim = DOORS.map(() => ({ open: 0, shake: 0, flash: 0 }))
 // Hits waiting for components/DoorHitFx.jsx to show a burst: { door, damage }.
 export const doorHits = []
 let wasEmitting = false
@@ -31,6 +32,7 @@ function resetDoors() {
   doorAnim.forEach((a) => {
     a.open = 0
     a.shake = 0
+    a.flash = 0
   })
 }
 
@@ -52,6 +54,7 @@ function hitDoor() {
   const { fartPower } = useGameStore.getState()
   useGameStore.setState((s) => ({ doorHp: s.doorHp.map((hp, j) => (j === i ? Math.max(0, hp - fartPower) : hp)) }))
   doorAnim[i].shake = 1
+  doorAnim[i].flash = 1
   doorHits.push({ door: i, damage: fartPower })
 }
 
@@ -70,12 +73,41 @@ function autoFartOnContact() {
   wasTouching = true
 }
 
+// Auto Break: walk to the first intact door and keep farting at it. Returns
+// the world-space move direction for playerMovement (null when not walking),
+// and switches itself off once no intact door is left.
+export function autoBreakWish() {
+  const { autoBreak } = useGameStore.getState()
+  if (!autoBreak || player.seated) return null
+  const i = firstIntactDoor()
+  if (i < 0) {
+    useGameStore.setState({ autoBreak: false })
+    return null
+  }
+  const dx = -player.position.x
+  const dz = DOORS[i].z + player.dims.radius + 0.02 - player.position.z
+  const dist = Math.hypot(dx, dz)
+  if (dist < 0.08) return null
+  return { x: dx / dist, z: dz / dist }
+}
+
+function autoBreakFart() {
+  if (!useGameStore.getState().autoBreak || player.seated) return
+  const i = firstIntactDoor()
+  if (i < 0) return
+  const dz = player.position.z - DOORS[i].z
+  if (dz >= 0 && dz <= player.dims.radius + 0.1 && Math.abs(player.position.x) <= CORRIDOR.halfWidth) {
+    inputState.fart = true
+  }
+}
+
 export function step(dt) {
   const inCorridor = player.position.z < HAZARD_Z
   if (wasInCorridor && !inCorridor) resetDoors()
   wasInCorridor = inCorridor
 
   autoFartOnContact()
+  autoBreakFart()
   // One hit per fart, as the gas starts.
   if (fart.emitting && !wasEmitting) hitDoor()
   wasEmitting = fart.emitting
@@ -84,5 +116,6 @@ export function step(dt) {
   doorAnim.forEach((a, i) => {
     if (doorHp[i] <= 0) a.open = Math.min(1, a.open + OPEN_SPEED * dt)
     a.shake = Math.max(0, a.shake - SHAKE_DECAY * dt)
+    a.flash = Math.max(0, a.flash - FLASH_DECAY * dt)
   })
 }

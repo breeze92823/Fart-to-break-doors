@@ -644,3 +644,45 @@ export function portalReqTexture(rebirths, power) {
     number(power, by)
   })
 }
+
+// Three transparent crack layers for a door leaf; each stage of damage shows one more.
+let doorCracks
+export function doorCrackTextures() {
+  if (doorCracks) return doorCracks
+  let seed = 7
+  const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647)
+  doorCracks = [0, 1, 2].map((layer) => {
+    const c = document.createElement('canvas')
+    c.width = 256
+    c.height = 384
+    const ctx = c.getContext('2d')
+    ctx.lineCap = 'round'
+    ctx.lineJoin = 'round'
+    const branch = (x, y, a, len, w, depth) => {
+      ctx.lineWidth = w
+      ctx.beginPath()
+      ctx.moveTo(x, y)
+      const steps = 7
+      for (let i = 0; i < steps; i += 1) {
+        a += (rnd() - 0.5) * 0.9
+        x += Math.cos(a) * (len / steps)
+        y += Math.sin(a) * (len / steps)
+        ctx.lineTo(x, y)
+        if (depth > 0 && rnd() < 0.35) branch(x, y, a + (rnd() < 0.5 ? 0.9 : -0.9), len * 0.45, w * 0.65, depth - 1)
+      }
+      ctx.stroke()
+    }
+    ctx.strokeStyle = 'rgba(12,6,3,0.92)'
+    const n = 3 + layer * 2
+    for (let i = 0; i < n; i += 1) {
+      const edge = rnd() * Math.PI * 2
+      const ox = 128 + Math.cos(edge) * 40 * rnd()
+      const oy = 192 + Math.sin(edge) * 70 * rnd()
+      branch(ox, oy, rnd() * Math.PI * 2, 90 + rnd() * 90, 4 + layer, 2)
+    }
+    const t = new CanvasTexture(c)
+    t.colorSpace = SRGBColorSpace
+    return t
+  })
+  return doorCracks
+}
