@@ -24,8 +24,8 @@ The player spawns at `SPAWN` (0, −3), facing north at the door. "Left" and "ri
         └───────────────────────────┬─────────────────────────────┘
  x −26 ┌── HALL ───── z −9.5 ───────┴──────────────────────┐ x +26
        │ W-LOCKERS  N-LOCKERS-W   ·  SINK  ·  N-LOCKERS-E   │ E-LOCKERS
-       │      FOOD-PAD (−14,−4.4)      FART-PAD (14,−4.4)   │ OFFLINE-SIGN
-       │                                         SPIN-PAD   │
+       │      FOOD-PAD (−14,−4.4)      FART-PAD (14,−4.4)   │
+       │                                                    │
   W    │ ┌ EGG-SHOP ┐   ┌──────── TRAINING-AREA ────────┐    │  E
        │ │ eggs z   │   │  ring: tables (W)  PIT  (E)   │ LEADERBOARDS
        │ │ 9.5–24.6 │   │        tables (S)             │ ROUND-TABLES
@@ -56,8 +56,6 @@ Name is what to call it. Source is the constant that places it (`room.js` unless
 | `CHEVRONS` | z ≈ −6.8, x ±2.6 | Glowing orange arrows on the floor pointing at the door | `Room.jsx` `Corridor` |
 | `FOOD-PAD` | (−14, −4.4), radius 2.1 | BUY pad, floating bread, price of the next unowned food; walking up opens the Training Food window (`ui/FoodShop.jsx`) | `BUY_PADS` (id `food`) |
 | `FART-PAD` | (14, −4.4), radius 2.1 | BUY pad, floating gas puff, "NEXT FART: $10K" | `BUY_PADS` (id `fart`) |
-| `SPIN-PAD` | (19.8, −4.6), radius 2 | Glowing green ring, "FREE! x3" wheel above | `SPIN_PAD` |
-| `OFFLINE-SIGN` | (23.2, −0.4), faces west | Wooden signpost, "You earn Cash offline!" | `OFFLINE_SIGN` |
 | `SINK` | (7, −9.05) | Hand-wash sink on the north wall | `SINK` |
 
 ### Lockers
@@ -118,9 +116,9 @@ Name is what to call it. Source is the constant that places it (`room.js` unless
 
 ## Status of each landmark
 
-- **Solid** (blocks the player, who can stand on top up to about 0.3 m below its top): tables, benches, lockers, crates, sink, round tables, offline sign, portal posts, egg pedestals, leaderboards. Everything else can be walked over or through.
+- **Solid** (blocks the player, who can stand on top up to about 0.3 m below its top): tables, benches, lockers, crates, sink, round tables, portal posts, egg pedestals, leaderboards. Everything else can be walked over or through.
 - **Working**: `SPAWN`, `HALL`, `CORRIDOR`, and walking.
-- **Display only** (draws correctly, does nothing yet): `DOOR` (it doesn't break), `DOOR-TAG`, `FOOD-PAD`, `FART-PAD`, `SPIN-PAD`, `PORTAL`, all eggs, both leaderboards, `OFFLINE-SIGN`. Prices and requirement numbers are placeholders.
+- **Display only** (draws correctly, does nothing yet): `DOOR` (it doesn't break), `DOOR-TAG`, `FOOD-PAD`, `FART-PAD`, `PORTAL`, all eggs, both leaderboards. Prices and requirement numbers are placeholders.
 - **Not built**: the "Train" prompt at `TRAINING-PIT`, player and pet characters, the Group Rewards chest.
 
 ## Calling a landmark in a request

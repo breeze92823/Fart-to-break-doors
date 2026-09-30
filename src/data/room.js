@@ -84,9 +84,8 @@ export const EGGS = [
 ]
 export const EGG_PEDESTAL = { radius: 0.95, height: 0.4 }
 
-// East-side shop corner between the door and the training area: the BUY
-// pad for the next Fart, the free daily spin pad, and the offline-cash sign.
-// Prices are display-only for now. `facing` is the yaw the fronts face.
+// Shop corner between the door and the training area: the BUY pads for the
+// next Food and Fart. Prices are display-only for now.
 export const BUY_PADS = [
   { id: 'food', item: 'food', x: -14, z: -4.4, radius: 2.1, label: 'NEXT FOOD:', price: '$3.5K' },
   { id: 'fart', item: 'fart', x: 14, z: -4.4, radius: 2.1, label: 'NEXT FART:', price: '$10K' },
@@ -146,8 +145,6 @@ export const DOOR_TAGS = [
   [31000000, 6400],
   [34500000, 6800],
 ].map(([hp, cash], i) => ({ level: i + 1, hp, max: hp, cash, y: 1.6 }))
-export const SPIN_PAD = { x: 19.8, z: -4.6, radius: 2, reward: 'x3' }
-export const OFFLINE_SIGN = { x: 23.2, z: -0.4, facing: -Math.PI / 2 }
 
 // Round white tables with stools, in front of the leaderboards.
 export const ROUND_TABLE = { radius: 0.95, height: 0.82 }
@@ -235,7 +232,6 @@ function buildColliders() {
   }
   out.push(box(SINK.x, SINK.z, 0.9, 0.7, 1))
   for (const t of ROUND_TABLES) out.push(box(t.x, t.z, 2 * ROUND_TABLE.radius, 2 * ROUND_TABLE.radius, ROUND_TABLE.height))
-  out.push(box(OFFLINE_SIGN.x, OFFLINE_SIGN.z, 0.5, 2.6, 2.2))
   const portalAlongX = Math.abs(Math.sin(PORTAL.facing)) < 0.5
   for (const side of [-1, 1]) {
     // Only the two stone posts are solid; the opening between them is walkable.

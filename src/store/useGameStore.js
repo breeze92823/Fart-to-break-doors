@@ -42,12 +42,38 @@ export const useGameStore = create((set) => ({
   // COMPLETE banner isn't replayed on every visit.
   tutorialResumedDone: false,
   // Applies the saved doc from the server (net.js `progress`). Only the
-  // tutorial step is durable so far; it only ever moves forward.
+  // tutorial step (only ever moves forward), cash, fart power, rebirths, crowns,
+  // owned foods/farts and the equipped food/fart are durable so far.
   hydrate: (d) =>
     set((s) => {
       const saved = typeof d?.tutorialStep === 'number' && Number.isFinite(d.tutorialStep) ? d.tutorialStep : 0
       const tutorialStep = Math.max(s.tutorialStep, Math.min(TUTORIAL_DONE_STEP, Math.max(0, Math.floor(saved))))
+      // Docs the client never saved (only the playtime flush wrote them) carry
+      // server defaults (fartPower 1, cash 0): keep the local starting values.
+      const fromClient =
+        !!d &&
+        (saved > 0 ||
+          d.cash > 0 ||
+          d.fartPower > 1 ||
+          d.rebirths > 0 ||
+          d.crowns > 0 ||
+          Object.keys(d.trainingFoods ?? {}).length > 0 ||
+          (d.ownedFarts?.length ?? 0) > 0)
+      const num = (v, fallback) => (fromClient && typeof v === 'number' && Number.isFinite(v) ? v : fallback)
+      const foods = fromClient && d.trainingFoods && typeof d.trainingFoods === 'object' ? Object.keys(d.trainingFoods) : []
+      const ownedFarts = [...new Set([...s.ownedFarts, ...(fromClient && Array.isArray(d.ownedFarts) ? d.ownedFarts : [])])]
+      const ownedFoods = [...new Set([...s.ownedFoods, ...foods])]
+      // An equipped item must be one the player owns.
+      const equipped = (id, owned, fallback) => (fromClient && owned.includes(id) ? id : fallback)
       return {
+        equippedFood: equipped(d?.equippedFood, ownedFoods, s.equippedFood),
+        equippedFart: equipped(d?.equippedFart, ownedFarts, s.equippedFart),
+        ownedFarts,
+        crowns: Math.floor(num(d?.crowns, s.crowns)),
+        cash: num(d?.cash, s.cash),
+        fartPower: num(d?.fartPower, s.fartPower),
+        rebirths: num(d?.rebirths, s.rebirths),
+        ownedFoods,
         tutorialStep,
         tutorialResumedDone: s.tutorialResumedDone || (tutorialStep >= TUTORIAL_DONE_STEP && s.tutorialStep < TUTORIAL_DONE_STEP),
         progressKnown: true,

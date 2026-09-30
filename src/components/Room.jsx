@@ -35,13 +35,11 @@ import {
   LEADERBOARDS,
   LOCKER,
   LOCKER_BANKS,
-  OFFLINE_SIGN,
   PORTAL,
   PILASTER_X,
   ROUND_TABLE,
   ROUND_TABLES,
   SINK,
-  SPIN_PAD,
   TABLE,
   TABLES,
   TRAINING_AREA,
@@ -73,7 +71,6 @@ import {
   createLeaderboardBoard,
   lightPanelTexture,
   lockerTexture,
-  offlineSignTexture,
   padLabelTexture,
   portalReqTexture,
   portalTitleTexture,
@@ -81,7 +78,6 @@ import {
   portalGlowTexture,
   rebirthTagTexture,
   signTexture,
-  spinTagTexture,
   trainingFloorTexture,
   trainingPitTexture,
 } from '../materials/roomTextures.js'
@@ -129,9 +125,6 @@ function materials() {
     nestCap: std('#4a3a2a', { roughness: 0.9 }),
     padSnow: std('#f1f6ff', { roughness: 0.35 }),
     roundTable: std('#eef3ff', { roughness: 0.35, metalness: 0.15 }),
-    offlineSign: new MeshBasicMaterial({ map: offlineSignTexture(), toneMapped: false }),
-    spinFill: new MeshBasicMaterial({ color: '#1f8f1f', transparent: true, opacity: 0.35, toneMapped: false }),
-    spinRing: new MeshBasicMaterial({ color: '#3dff3d', toneMapped: false }),
     bread: std('#e88a2c', { roughness: 0.55 }),
     breadCut: std('#ffe3a0', { roughness: 0.5 }),
     gas: new MeshStandardMaterial({ color: '#c39a3c', emissive: '#7a5512', emissiveIntensity: 0.35, roughness: 0.9, transparent: true, opacity: 0.6, depthWrite: false }),
@@ -643,12 +636,9 @@ function DoorTags() {
   })
 }
 
-// East-side shop corner: BUY pad with the next Fart's price, the FREE spin
-// pad, and the offline-cash signpost. Display only for now.
+// Shop corner: the BUY pads for the next Food and Fart. Display only for now.
 function ShopCorner() {
   const m = materials()
-  const spin = SPIN_PAD
-  const sign = OFFLINE_SIGN
   const upcoming = nextFood(useGameStore((s) => s.ownedFoods))
   const upcomingFart = nextFart(useGameStore((s) => s.ownedFarts))
   return (
@@ -672,22 +662,6 @@ function ShopCorner() {
         </group>
         )
       })}
-
-      {/* Spin pad: glowing green ring with the floating wheel above */}
-      <group position={[spin.x, 0, spin.z]}>
-        <mesh geometry={DISC} material={m.spinFill} position={[0, 0.02, 0]} scale={[spin.radius, 0.04, spin.radius]} />
-        <mesh material={m.spinRing} position={[0, 0.05, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-          <ringGeometry args={[spin.radius * 0.82, spin.radius, 48]} />
-        </mesh>
-        <sprite material={spriteMaterial(`spin:${spin.reward}`, spinTagTexture(spin.reward))} position={[0, 2.5, 0]} scale={[2.4, 3.6, 1]} />
-      </group>
-
-      {/* Offline-cash signpost */}
-      <group position={[sign.x, 0, sign.z]} rotation={[0, sign.facing, 0]}>
-        <Box p={[0, 0.9, -0.05]} s={[0.22, 1.8, 0.22]} m={m.doorWood} cast />
-        <Box p={[0, 1.7, 0]} s={[2.6, 1.3, 0.14]} r={[0, 0, -0.06]} m={m.doorWood} cast />
-        <mesh geometry={PLANE} material={m.offlineSign} position={[0, 1.7, 0.08]} scale={[2.45, 1.2, 1]} rotation={[0, 0, -0.06]} />
-      </group>
     </group>
   )
 }

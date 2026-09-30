@@ -147,13 +147,30 @@ function sendStatsNow() {
 // The ROOM decides whether this session may persist (its userIds map), so a
 // save sent just after a logout lands as a harmless no-op there.
 function sendProgressNow() {
-  send('saveProgress', { tutorialStep: useGameStore.getState().tutorialStep })
+  const s = useGameStore.getState()
+  const trainingFoods = {}
+  for (const id of s.ownedFoods) trainingFoods[id] = 1
+  send('saveProgress', {
+    tutorialStep: s.tutorialStep,
+    cash: s.cash,
+    fartPower: s.fartPower,
+    rebirths: s.rebirths,
+    trainingFoods,
+    ownedFarts: s.ownedFarts,
+    equippedFood: s.equippedFood,
+    equippedFart: s.equippedFart,
+    crowns: s.crowns,
+  })
+}
+
+function progressSnap(s) {
+  return `${s.tutorialStep}|${s.cash}|${s.fartPower}|${s.rebirths}|${s.ownedFoods.join(',')}|${s.ownedFarts.join(',')}|${s.equippedFood}|${s.equippedFart}|${s.crowns}`
 }
 
 let statsTimer = 0
 let progressTimer = 0
 let lastSnap = ''
-let lastStep = useGameStore.getState().tutorialStep
+let lastProgSnap = progressSnap(useGameStore.getState())
 
 // Applied at most once per IDENTITY: the first `progress` under the current
 // sign-in is the real load. A later reattach under the SAME identity would
@@ -162,9 +179,10 @@ let hydratedFromServer = false
 
 // useGameStore.subscribe fires on ANY change, so filter to the fields we send.
 function onStoreChange(s) {
-  if (s.tutorialStep !== lastStep) {
-    lastStep = s.tutorialStep
-    // Only once the saved step has loaded, or the initial 0 could overwrite it.
+  const prog = progressSnap(s)
+  if (prog !== lastProgSnap) {
+    lastProgSnap = prog
+    // Only once the saved doc has loaded, or the initial values could overwrite it.
     if (getStableUserId() && s.progressKnown && !progressTimer) {
       progressTimer = setTimeout(() => {
         progressTimer = 0

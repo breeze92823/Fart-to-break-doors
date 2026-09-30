@@ -821,52 +821,6 @@ export function rebirthTagTexture(n) {
   })
 }
 
-// Wooden signpost plank: "You earn Cash offline!" on brown boards with a
-// little Cash stack at each end.
-export function offlineSignTexture() {
-  return make('offlineSign', 512, 256, (ctx, w, h) => {
-    const rand = seededRandom(9)
-    const g = ctx.createLinearGradient(0, 0, 0, h)
-    g.addColorStop(0, '#b45f31')
-    g.addColorStop(1, '#8a3f1e')
-    ctx.fillStyle = g
-    ctx.fillRect(0, 0, w, h)
-    ctx.fillStyle = 'rgba(40,15,5,0.35)'
-    for (let y = 0; y <= h; y += h / 2) ctx.fillRect(0, y - 2, w, 4)
-    for (let i = 0; i < 260; i++) {
-      ctx.fillStyle = rand() < 0.5 ? 'rgba(60,25,8,0.18)' : 'rgba(255,210,150,0.10)'
-      ctx.fillRect(rand() * w, rand() * h, 20 + rand() * 60, 2)
-    }
-    ctx.strokeStyle = '#5a2a12'
-    ctx.lineWidth = 12
-    ctx.strokeRect(6, 6, w - 12, h - 12)
-    const cash = (x, y) => {
-      ctx.fillStyle = '#39c957'
-      ctx.strokeStyle = '#0b3d1a'
-      ctx.lineWidth = 4
-      ctx.fillRect(x, y, 46, 30)
-      ctx.strokeRect(x, y, 46, 30)
-      ctx.fillStyle = '#c9ffd2'
-      ctx.beginPath()
-      ctx.arc(x + 23, y + 15, 8, 0, Math.PI * 2)
-      ctx.fill()
-    }
-    cash(28, 40)
-    cash(w - 74, 40)
-    ctx.font = '800 62px "Arial Rounded MT Bold", "Arial Black", sans-serif'
-    ctx.textAlign = 'center'
-    ctx.textBaseline = 'middle'
-    ctx.lineJoin = 'round'
-    ctx.lineWidth = 12
-    ctx.strokeStyle = '#3a1808'
-    ctx.fillStyle = '#ffffff'
-    for (const [t, y] of [['You earn Cash', 88], ['offline!', 176]]) {
-      ctx.strokeText(t, w / 2, y)
-      ctx.fillText(t, w / 2, y)
-    }
-  })
-}
-
 // Two-line pad label: small heading, then a Cash icon and the price.
 export function padLabelTexture(title, price) {
   return make(`padLabel:${title}:${price}`, 512, 256, (ctx, w, h) => {
@@ -902,40 +856,6 @@ export function padLabelTexture(title, price) {
     ctx.strokeText(price, 170, cy + 6)
     ctx.fillStyle = '#5bff4a'
     ctx.fillText(price, 170, cy + 6)
-  })
-}
-
-// Spin pad marker: "FREE!" over a rainbow wheel with its "x3" reward.
-export function spinTagTexture(reward) {
-  return make(`spinTag:${reward}`, 256, 384, (ctx, w, h) => {
-    ctx.clearRect(0, 0, w, h)
-    ctx.lineJoin = 'round'
-    ctx.textAlign = 'center'
-    ctx.textBaseline = 'middle'
-    ctx.font = '900 72px "Arial Black", Impact, sans-serif'
-    ctx.lineWidth = 16
-    ctx.strokeStyle = '#06323a'
-    ctx.strokeText('FREE!', w / 2, 52)
-    ctx.fillStyle = '#39f0e0'
-    ctx.fillText('FREE!', w / 2, 52)
-    const cx = w / 2
-    const cy = 215
-    const r = 92
-    const grad = ctx.createConicGradient(0, cx, cy)
-    ;['#ff2a2a', '#ff8a00', '#ffe600', '#2fd12f', '#16c3ff', '#3d5bff', '#b02bff', '#ff2ab4', '#ff2a2a'].forEach((c, i, a) => grad.addColorStop(i / (a.length - 1), c))
-    ctx.fillStyle = grad
-    ctx.beginPath()
-    ctx.arc(cx, cy, r, 0, Math.PI * 2)
-    ctx.fill()
-    ctx.lineWidth = 8
-    ctx.strokeStyle = '#fff'
-    ctx.stroke()
-    ctx.font = '900 92px "Arial Black", Impact, sans-serif'
-    ctx.lineWidth = 18
-    ctx.strokeStyle = '#111'
-    ctx.strokeText(reward, cx + 30, cy + 78)
-    ctx.fillStyle = '#fff'
-    ctx.fillText(reward, cx + 30, cy + 78)
   })
 }
 
