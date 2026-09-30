@@ -78,7 +78,7 @@ export function crateTexture() {
   })
 }
 
-// Vertical planks with a band of slats up top: the face of one door leaf.
+// Plain vertical planks: the solid lower panel of one door leaf.
 export function doorPlankTexture() {
   return make('doorPlanks', 256, 320, (ctx, w, h) => {
     const rand = seededRandom(5)
@@ -95,9 +95,6 @@ export function doorPlankTexture() {
       ctx.fillStyle = rand() < 0.5 ? 'rgba(50,25,8,0.14)' : 'rgba(255,215,160,0.08)'
       ctx.fillRect(rand() * w, rand() * h, 1.5, 8 + rand() * 30)
     }
-    // Slatted window band near the top.
-    ctx.fillStyle = '#2c1a0e'
-    for (let i = 0; i < 14; i++) ctx.fillRect(8 + i * 17.5, 22, 8, 36)
   })
 }
 

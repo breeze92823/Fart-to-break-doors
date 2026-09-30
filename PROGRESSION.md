@@ -42,7 +42,7 @@ The six values that make up a player's progress in Fart to Break Doors. **None o
 Slow-changing values belong in `store/useGameStore.js` (zustand), not in the per-frame `playerState.js`. A saved doc should be validated field by field when loaded:
 
 ```js
-{ cash: 0, fartPower: 1, rebirths: 0, trainingFoods: {/* foodId: count */}, farts: 0, wins: 0 }
+{ cash: 0, fartPower: 20, rebirths: 0, trainingFoods: {/* foodId: count */}, farts: 0, wins: 0 }
 ```
 
 ## Open questions

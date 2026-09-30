@@ -71,8 +71,8 @@ export const BUY_PADS = [
   { id: 'fart', item: 'fart', x: 14, z: -4.4, radius: 2.1, label: 'NEXT FART:', price: '$10K' },
 ]
 
-// Health tag floating in front of the door (display only for now).
-export const DOOR_TAG = { level: 1, hp: 20, max: 20, y: 3.3 }
+// Health tag floating in front of each door, in DOORS order (display only for now).
+export const DOOR_TAGS = [20, 60, 150, 400, 1000].map((hp, i) => ({ level: i + 1, hp, max: hp, y: 1.6 }))
 export const SPIN_PAD = { x: 19.8, z: -4.6, radius: 2, reward: 'x3' }
 export const OFFLINE_SIGN = { x: 23.2, z: -0.4, facing: -Math.PI / 2 }
 

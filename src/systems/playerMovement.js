@@ -1,7 +1,9 @@
 import { inputState } from './input.js'
 import { player } from './playerState.js'
 import { getYaw } from './cameraOrbit.js'
+import { fart, FART } from './fart.js'
 import { stepSeated } from './seat.js'
+import { barrierZ } from './doors.js'
 import { BOUNDS, GROUND_Y, PLAYER_MOVE_SPEED } from '../data/world.js'
 import { COLLIDERS } from '../data/room.js'
 
@@ -77,7 +79,9 @@ export function step(dt) {
   const rightX = Math.cos(yaw)
   const rightZ = -Math.sin(yaw)
 
-  const mv = inputState.move
+  // Mid-fart the player is rooted: no walking, no jumping.
+  const farting = fart.time < FART.holdTime
+  const mv = farting ? { x: 0, z: 0 } : inputState.move
   let wishX = fwdX * mv.z + rightX * mv.x
   let wishZ = fwdZ * mv.z + rightZ * mv.x
   // Diagonals must not be faster than straight lines.
@@ -91,7 +95,7 @@ export function step(dt) {
 
   // Jump reads last frame's grounded flag, then we clear it for this frame.
   if (inputState.jump) {
-    if (player.grounded) player.velocity.y = JUMP_SPEED
+    if (player.grounded && !farting) player.velocity.y = JUMP_SPEED
     inputState.jump = false
   }
   player.grounded = false
@@ -105,7 +109,9 @@ export function step(dt) {
   const r = player.dims.radius
   if (p.x < BOUNDS.minX + r) p.x = BOUNDS.minX + r
   if (p.x > BOUNDS.maxX - r) p.x = BOUNDS.maxX - r
-  if (p.z < BOUNDS.minZ + r) p.z = BOUNDS.minZ + r
+  // Unbroken doors are solid; the first intact one is the barrier.
+  const minZ = Math.min(BOUNDS.minZ, barrierZ())
+  if (p.z < minZ + r) p.z = minZ + r
   if (p.z > BOUNDS.maxZ - r) p.z = BOUNDS.maxZ - r
 
   const floor = resolveColliders(p, r)
@@ -116,7 +122,8 @@ export function step(dt) {
   }
 
   // Face the direction of travel.
-  if (Math.hypot(wishX, wishZ) > 0.01) {
+  // (not mid-fart: the model is turning its back to the gas)
+  if (Math.hypot(wishX, wishZ) > 0.01 && !farting) {
     player.facing = Math.atan2(wishX, wishZ)
   }
 }

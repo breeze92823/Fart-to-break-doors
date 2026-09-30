@@ -23,7 +23,32 @@ const BELLY_PARTS = [
   ['BellyLower', [2.05, 1.1, 2.0], [0, 0.1, 0.45]],
 ]
 
+// Belly/waist size multiplier (store `bellySize`, synced to other players).
+// 1 = the sizes above. Width and depth scale fully, height at half rate so a
+// fat character grows outward more than tall.
+export const BELLY_SIZE = { def: 1, min: 0.5, max: 3 }
+
 let geo = null
+
+// Ease the belly toward `target`, at most a step per call, and re-scale only
+// when it moved. Returns nothing; the current value lives on root.bellyK so
+// each character (local or remote) eases independently.
+export function easeBellySize(root, target, dt) {
+  const upper = root?.nodes?.BellyUpper
+  if (!upper) return
+  const goal = Math.min(BELLY_SIZE.max, Math.max(BELLY_SIZE.min, Number.isFinite(target) ? target : 1))
+  const cur = root.bellyK ?? 1
+  if (Math.abs(goal - cur) < 0.001 && root.bellyK !== undefined) return
+  const k = Math.abs(goal - cur) < 0.002 ? goal : cur + (goal - cur) * (1 - Math.exp(-8 * dt))
+  root.bellyK = k
+  const h = 1 + (k - 1) * 0.5
+  for (const [name, [rx, ry, rz], [x, y, z]] of BELLY_PARTS) {
+    const m = root.nodes[name]
+    if (!m) continue
+    m.scale.set(rx * k, ry * h, rz * k)
+    m.position.set(x, y * h, z * k)
+  }
+}
 
 // Idempotent: a root that already has the belly is left alone. Each character
 // gets its own material so one player's skin colour never leaks to another.

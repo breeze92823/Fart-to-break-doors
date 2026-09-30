@@ -89,6 +89,12 @@ export const GAIT = {
 
   sitLeg: -1.45, // thighs forward, seated
   sitArm: -0.5,
+
+  // Fart pose, blended in by fart.pose (0..1): hunch forward, butt out,
+  // arms swung back, knees bent.
+  fartLean: 0.75,
+  fartArm: 0.9,
+  fartLeg: -0.35,
 }
 
 export function clamp(n, min, max) {

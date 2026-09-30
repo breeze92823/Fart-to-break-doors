@@ -8,6 +8,7 @@ export const inputState = {
   look: { dx: 0, dy: 0 }, // pixels dragged this frame; consumed by cameraOrbit
   zoom: 0, // wheel delta this frame; consumed by cameraOrbit
   jump: false,
+  fart: false, // left-click on the canvas; cleared by systems/fart.js
 }
 
 const held = new Set()
@@ -49,6 +50,8 @@ function onKeyUp(e) {
 function onPointerDown(e) {
   if (e.pointerType === 'touch') return
   if (e.button === 2) orbiting = true
+  // Only clicks that land on the canvas: HUD controls sit above it.
+  if (e.button === 0 && e.target instanceof HTMLCanvasElement) inputState.fart = true
 }
 
 function onPointerUp(e) {

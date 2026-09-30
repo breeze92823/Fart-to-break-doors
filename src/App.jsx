@@ -9,6 +9,9 @@ import Ground from './components/Ground.jsx'
 import Room from './components/Room.jsx'
 import Lighting from './components/Lighting.jsx'
 import Player from './components/Player.jsx'
+import RemotePlayers from './components/RemotePlayers.jsx'
+import FartGas from './components/FartGas.jsx'
+import DoorHitFx from './components/DoorHitFx.jsx'
 
 // Indoors: the hall is fully enclosed, so the clear colour only shows
 // through gaps; match it to the walls.
@@ -52,6 +55,9 @@ export default function App() {
         <LoadingGate />
       </Suspense>
       <Player />
+      <RemotePlayers />
+      <FartGas />
+      <DoorHitFx />
     </Canvas>
   )
 }

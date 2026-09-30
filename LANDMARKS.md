@@ -20,7 +20,7 @@ The player spawns at `SPAWN` (0, −3), facing north at the door. "Left" and "ri
 ```
                       N  (−Z)
         ┌──────────── CORRIDOR (x ±4, z −45.5 … −9.5) ────────────┐
-        │   DOOR  z −20.5   ·  chevrons  ·  hazard strip          │
+        │   DOOR  z −11   ·  chevrons  ·  hazard strip          │
         └───────────────────────────┬─────────────────────────────┘
  x −26 ┌── HALL ───── z −9.5 ───────┴──────────────────────┐ x +26
        │ W-LOCKERS  N-LOCKERS-W   ·  SINK  ·  N-LOCKERS-E   │ E-LOCKERS
@@ -47,10 +47,11 @@ Name is what to call it. Source is the constant that places it (`room.js` unless
 | `HALL` | x ±26, z −9.5 … 34, ceiling 12 | The whole cafeteria room | `world.js` `HALL` |
 | `CORRIDOR` | x ±4, z −45.5 … −9.5, ceiling 6 | Passage north from the hall's middle, ends at the door | `world.js` `CORRIDOR` |
 | `CORRIDOR-MOUTH` | z −9.5, x ±4 | Chunky portal frame where the corridor meets the hall | `Room.jsx` `Corridor` |
-| `DOOR` | z −20.5 (south face), 4.4 m tall, 0.35 m thick | The breakable wooden double door. Scene groups: `door`, `door-left`, `door-right` | `world.js` `DOOR` |
-| `DOOR-TAG` | 1.4 m south of the door, y 3.3 | Floating "Level: 1" and 20/20 health bar | `DOOR_TAG` |
-| `HAZARD-STRIP` | z ≈ −20.05, across the corridor | Yellow/black stripe at the door threshold | `Room.jsx` `Corridor` |
-| `CHEVRONS` | z ≈ −16.3, x ±2.6 | Glowing orange arrows on the floor pointing at the door | `Room.jsx` `Corridor` |
+| `DOOR` | z −11 (south face), 4.4 m tall, 0.35 m thick | The breakable wooden double gate: solid planked lower panel with an X brace, open above it. Scene groups: `door`, `door-left`, `door-right` | `world.js` `DOOR` |
+| `DOOR-2` … `DOOR-5` | z −16.5, −22, −27.5, −33 (5.5 m apart, behind `DOOR`) | Same gate design, seen through the open space above the door in front. Not reachable yet: the player stops at `DOOR` | `world.js` `DOORS` |
+| `DOOR-TAG` | 1.4 m south of each door, y 1.6 | Floating "Level: N" and health bar (20, 60, 150, 400, 1000) | `DOOR_TAGS` |
+| `HAZARD-STRIP` | z ≈ −10.55, across the corridor | Yellow/black stripe at the door threshold | `Room.jsx` `Corridor` |
+| `CHEVRONS` | z ≈ −6.8, x ±2.6 | Glowing orange arrows on the floor pointing at the door | `Room.jsx` `Corridor` |
 | `FOOD-PAD` | (−14, −4.4), radius 2.1 | BUY pad, floating bread, "NEXT FOOD: $3.5K" | `BUY_PADS` (id `food`) |
 | `FART-PAD` | (14, −4.4), radius 2.1 | BUY pad, floating gas puff, "NEXT FART: $10K" | `BUY_PADS` (id `fart`) |
 | `SPIN-PAD` | (19.8, −4.6), radius 2 | Glowing green ring, "FREE! x3" wheel above | `SPIN_PAD` |

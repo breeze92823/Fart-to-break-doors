@@ -87,8 +87,29 @@ export function makeGait(built) {
 
 // speed01: horizontal speed / max move speed. Values outside 0..1 are
 // clamped. grounded (default true) gates the airborne pose below.
-export function updateGait(gait, dt, speed01, grounded = true, seated = false) {
+// fart01: 0..1 fart-pose blend (systems/fart.js); layered over whatever pose
+// the base gait just wrote.
+export function updateGait(gait, dt, speed01, grounded = true, seated = false, fart01 = 0) {
   if (!gait || dt <= 0) return
+  baseGait(gait, dt, speed01, grounded, seated)
+  if (fart01 > 0 && !seated && !gait.mixer) applyFartPose(gait, fart01)
+}
+
+// Hunch forward with the butt out: the spine pitches forward (the belly hangs
+// with it), arms swing back, knees bend. Premultiplies onto the bone
+// quaternions the base gait set from bind this frame, so it never accumulates.
+function applyFartPose(gait, k) {
+  for (const limb of gait.limbs) {
+    gait.q.setFromAxisAngle(gait.axis, (limb.kind === 'leg' ? GAIT.fartLeg : GAIT.fartArm) * k)
+    limb.bone.quaternion.premultiply(gait.q)
+  }
+  if (gait.spine) {
+    gait.q.setFromAxisAngle(AXES.x, GAIT.fartLean * k)
+    gait.spine.quaternion.premultiply(gait.q)
+  }
+}
+
+function baseGait(gait, dt, speed01, grounded, seated) {
 
   // Seated: thighs forward, arms resting. Generated rig only; an embedded
   // clip has no sit pose, so it just idles lowered onto the bench.

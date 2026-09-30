@@ -1,6 +1,7 @@
 import { inputState } from './input.js'
 import { player } from './playerState.js'
-import { CORRIDOR, DOOR, GROUND_Y, HALL } from '../data/world.js'
+import { barrierZ } from './doors.js'
+import { CORRIDOR, GROUND_Y, HALL } from '../data/world.js'
 
 // Third-person follow with right-drag orbit + wheel zoom. Position and
 // look-at ease at different rates so the rig reads as a follow cam rather
@@ -27,7 +28,7 @@ const ROOF_CLEARANCE = 1.8 // m below the hall ceiling, clear of the girders
 function clampToInterior(pos) {
   pos.x = Math.min(Math.max(pos.x, HALL.minX + WALL_MARGIN), HALL.maxX - WALL_MARGIN)
   const inCorridorLine = Math.abs(pos.x) < CORRIDOR.halfWidth - WALL_MARGIN
-  const minZ = inCorridorLine ? DOOR.z + WALL_MARGIN : HALL.minZ + WALL_MARGIN
+  const minZ = inCorridorLine ? barrierZ() + WALL_MARGIN : HALL.minZ + WALL_MARGIN
   pos.z = Math.min(Math.max(pos.z, minZ), HALL.maxZ - WALL_MARGIN)
   const roof = pos.z < HALL.minZ ? CORRIDOR.height - WALL_MARGIN : HALL.height - ROOF_CLEARANCE
   if (pos.y > roof) pos.y = roof

@@ -9,11 +9,13 @@ import { setView, syncYawToPlayer } from './systems/cameraOrbit.js'
 import { SPAWN, SPAWN_FACING } from './data/world.js'
 import { useGameStore } from './store/useGameStore.js'
 import { init as initBloxity } from './systems/bloxity.js'
+import { init as initNet } from './systems/net.js'
 
 initBloxity()
 resetPlayer(SPAWN, SPAWN_FACING)
 syncYawToPlayer()
 installInput()
+initNet()
 
 // Dev-only console hook, e.g. __game.teleport(10, 0, 5);
 // __game.store.getState().addSkill(50)

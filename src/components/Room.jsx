@@ -11,11 +11,13 @@ import {
   SphereGeometry,
   SpriteMaterial,
 } from 'three'
-import { CORRIDOR, DOOR, HALL } from '../data/world.js'
+import { CORRIDOR, DOOR, DOORS, HALL } from '../data/world.js'
+import { doorAnim, DOOR_OPEN_ANGLE } from '../systems/doors.js'
+import { useGameStore } from '../store/useGameStore.js'
 import {
   BENCH,
   BUY_PADS,
-  DOOR_TAG,
+  DOOR_TAGS,
   CRATES,
   EGG_MAT,
   EGG_PEDESTAL,
@@ -318,7 +320,8 @@ function Corridor() {
   const frameZ = []
   for (let z = HALL.minZ - 2.5; z > DOOR.z + 2; z -= 3.5) frameZ.push(z)
   for (let z = DOOR.z - 3.5; z > CORRIDOR.endZ + 1; z -= 3.5) frameZ.push(z)
-  const lightZ = frameZ.map((z) => z - 1.75).filter((z) => Math.abs(z - DOOR.z) > 1)
+  const nearDoor = (z, gap) => DOORS.some((d) => Math.abs(z - d.z) < gap)
+  const lightZ = frameZ.map((z) => z - 1.75).filter((z) => !nearDoor(z, 1))
 
   return (
     <group>
@@ -335,7 +338,7 @@ function Corridor() {
       <Box p={[0, CH + 0.4, HALL.minZ + 0.7]} s={[2 * HW + 2.8, 1.2, 1.4]} m={m.frame} />
 
       {/* Repeating frames receding down the corridor */}
-      {frameZ.map((z) => (
+      {frameZ.filter((z) => !nearDoor(z, 1.2)).map((z) => (
         <group key={z}>
           <Box p={[-HW + 0.3, CH / 2, z]} s={[0.6, CH, 1.1]} m={m.frame} />
           <Box p={[HW - 0.3, CH / 2, z]} s={[0.6, CH, 1.1]} m={m.frame} />
@@ -355,37 +358,52 @@ function Corridor() {
 
 // The breakable door: two plank leaves in a heavy frame, each with rails and
 // an X brace. Named so gameplay can find it later.
-function Door() {
+function Door({ z, index }) {
   const m = materials()
   const h = DOOR.height
   const t = DOOR.thickness
   const leafW = HW - 0.4
   const front = t / 2 + 0.06
-  const braceTop = h * 0.66
+  const panelH = h * 0.6 // solid planked lower panel; open space above it
+  const braceTop = panelH - 0.35
   const braceBottom = 0.3
   const braceW = leafW - 0.5
   const braceLen = Math.hypot(braceW, braceTop - braceBottom)
   const braceAngle = Math.atan2(braceTop - braceBottom, braceW)
 
+  // Leaves burst outward (north) once the door's health hits zero, and the
+  // whole door shudders when a fart lands (systems/doors.js owns the state).
+  const rootRef = useRef()
+  const leftRef = useRef()
+  const rightRef = useRef()
+  useFrame(({ clock }) => {
+    const a = doorAnim[index]
+    const angle = DOOR_OPEN_ANGLE * (1 - (1 - a.open) ** 3)
+    if (leftRef.current) leftRef.current.rotation.y = angle
+    if (rightRef.current) rightRef.current.rotation.y = -angle
+    if (rootRef.current) rootRef.current.position.x = Math.sin(clock.elapsedTime * 70) * 0.06 * a.shake
+  })
+
   return (
-    <group name="door" position={[0, 0, DOOR.z - t / 2]}>
+    <group ref={rootRef} name={index === 0 ? 'door' : `door-${index + 1}`} position={[0, 0, z - t / 2]}>
       <Box p={[-HW + 0.2, (h + 0.4) / 2, 0]} s={[0.4, h + 0.4, t + 0.3]} m={m.doorFrame} cast />
       <Box p={[HW - 0.2, (h + 0.4) / 2, 0]} s={[0.4, h + 0.4, t + 0.3]} m={m.doorFrame} cast />
       <Box p={[0, h + 0.2, 0]} s={[2 * HW, 0.4, t + 0.3]} m={m.doorFrame} cast />
       {[-1, 1].map((side) => (
-        <group key={side} name={side < 0 ? 'door-left' : 'door-right'} position={[side * (leafW / 2), 0, 0]}>
-          <Box p={[0, h / 2, 0]} s={[leafW - 0.04, h, t]} m={m.doorPlanks} cast />
-          {[
-            [0.16, 0.32],
-            [braceTop, 0.28],
-            [h - 0.16, 0.32],
-          ].map(([y, rh]) => (
-            <Box key={y} p={[0, y, front]} s={[leafW - 0.04, rh, 0.12]} m={m.doorWood} cast />
-          ))}
-          <Box p={[-leafW / 2 + 0.16, h / 2, front]} s={[0.28, h, 0.12]} m={m.doorWood} />
-          <Box p={[leafW / 2 - 0.16, h / 2, front]} s={[0.28, h, 0.12]} m={m.doorWood} />
+        <group key={side} ref={side < 0 ? leftRef : rightRef} name={side < 0 ? 'door-left' : 'door-right'} position={[side * leafW, 0, 0]}>
+         {/* Hinged on the outer edge: the inner group re-centres the leaf on the pivot */}
+         <group position={[-side * (leafW / 2), 0, 0]}>
+          {/* Solid lower panel: planks, a base rail, a cap rail and an X brace */}
+          <Box p={[0, panelH / 2, 0]} s={[leafW - 0.04, panelH, t]} m={m.doorPlanks} cast />
+          <Box p={[0, 0.16, front]} s={[leafW - 0.04, 0.32, 0.12]} m={m.doorWood} cast />
+          <Box p={[0, panelH - 0.14, front]} s={[leafW - 0.04, 0.28, 0.12]} m={m.doorWood} cast />
           <Box p={[0, (braceTop + braceBottom) / 2, front + 0.02]} s={[braceLen, 0.26, 0.1]} r={[0, 0, braceAngle]} m={m.doorWood} />
           <Box p={[0, (braceTop + braceBottom) / 2, front + 0.02]} s={[braceLen, 0.26, 0.1]} r={[0, 0, -braceAngle]} m={m.doorWood} />
+
+          {/* Side stiles run the height of the panel only */}
+          <Box p={[-leafW / 2 + 0.16, panelH / 2, front]} s={[0.28, panelH, 0.12]} m={m.doorWood} />
+          <Box p={[leafW / 2 - 0.16, panelH / 2, front]} s={[0.28, panelH, 0.12]} m={m.doorWood} />
+         </group>
         </group>
       ))}
     </group>
@@ -472,7 +490,7 @@ function Eggs() {
 
 const spriteMats = new Map()
 function spriteMaterial(key, texture) {
-  if (!spriteMats.has(key)) spriteMats.set(key, new SpriteMaterial({ map: texture, transparent: true, toneMapped: false }))
+  if (!spriteMats.has(key)) spriteMats.set(key, new SpriteMaterial({ map: texture, transparent: true, toneMapped: false, depthWrite: false }))
   return spriteMats.get(key)
 }
 
@@ -514,15 +532,20 @@ function FloatingItem({ item, y }) {
   )
 }
 
-function DoorTag() {
-  const t = DOOR_TAG
-  return (
-    <sprite
-      material={spriteMaterial(`doorTag:${t.level}:${t.hp}:${t.max}`, doorTagTexture(t.level, t.hp, t.max))}
-      position={[0, t.y, DOOR.z + 1.4]}
-      scale={[3.2, 1, 1]}
-    />
-  )
+function DoorTags() {
+  const doorHp = useGameStore((s) => s.doorHp)
+  return DOORS.map((d, i) => {
+    const t = { ...DOOR_TAGS[i], hp: doorHp[i] }
+    if (t.hp <= 0) return null
+    return (
+      <sprite
+        key={d.z}
+        material={spriteMaterial(`doorTag:${t.level}:${t.hp}:${t.max}`, doorTagTexture(t.level, t.hp, t.max))}
+        position={[0, t.y, d.z + 1.4]}
+        scale={[3.2, 1, 1]}
+      />
+    )
+  })
 }
 
 // East-side shop corner: BUY pad with the next Fart's price, the FREE spin
@@ -793,14 +816,16 @@ export default function Room() {
       <Roof />
       <WallFixtures />
       <Corridor />
-      <Door />
+      {DOORS.map((d, i) => (
+        <Door key={d.z} z={d.z} index={i} />
+      ))}
       <TrainingArea />
       <Tables />
       <Lockers />
       <Crates />
       <Eggs />
       <ShopCorner />
-      <DoorTag />
+      <DoorTags />
       <Portal />
       <RoundTables />
       <Sink />

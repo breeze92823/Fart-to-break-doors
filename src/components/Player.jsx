@@ -2,17 +2,19 @@ import { useEffect, useRef, useState } from 'react'
 import { useFrame } from '@react-three/fiber'
 import { Quaternion, Vector3 } from 'three'
 import { player } from '../systems/playerState.js'
+import { fart, FART } from '../systems/fart.js'
 import { authState, getEquippedAvatar, getProportions, onAvatarChanged, onProportionsChanged, subscribeAuth } from '../systems/bloxity.js'
 import { DEV_MODE } from '../data/bloxity.js'
 import { applyProportions, attachEquippedAccessories } from '../systems/avatarLoader.js'
 import { buildDefaultCharacter, loadBaseCharacter } from '../systems/defaultCharacter.js'
-import { syncBellyColor } from '../systems/belly.js'
+import { syncBellyColor, easeBellySize } from '../systems/belly.js'
 import { useGameStore } from '../store/useGameStore.js'
 import { makeGait, updateGait, disposeGait } from '../systems/avatarAnim.js'
 
 const _up = new Vector3(0, 1, 0)
 const _targetQuat = new Quaternion()
 const TURN_RATE = 0.001 // base of 1 - TURN_RATE^delta; smaller = snappier turn
+const FART_TURN_RATE = 0.00001 // much snappier spin for the fart's 180
 const SIT_DROP = 0.6 // m the model sinks while seated so the hips (~0.9 m up) rest on the bench
 
 // The player is the game's own character (systems/defaultCharacter.js). A
@@ -96,12 +98,16 @@ export default function Player() {
     if (!g) return
     g.position.set(player.position.x, player.position.y - (player.seated ? SIT_DROP : 0), player.position.z)
     _targetQuat.setFromAxisAngle(_up, player.facing)
-    g.quaternion.slerp(_targetQuat, 1 - Math.pow(TURN_RATE, delta))
+    const fastTurn = fart.turned || fart.time < FART.holdTime + 0.5 // the spin and its turn back
+    g.quaternion.slerp(_targetQuat, 1 - Math.pow(fastTurn ? FART_TURN_RATE : TURN_RATE, delta))
+    fart.aligned = g.quaternion.angleTo(_targetQuat) < 0.05
+
+    easeBellySize(avatar, useGameStore.getState().bellySize, Math.min(delta, 0.1))
 
     const gait = gaitRef.current
     if (gait) {
       const speed01 = Math.hypot(player.velocity.x, player.velocity.z) / player.moveSpeed
-      updateGait(gait, Math.min(delta, 0.1), speed01, player.grounded, player.seated)
+      updateGait(gait, Math.min(delta, 0.1), speed01, player.grounded, player.seated, fart.pose)
     }
   })
 
