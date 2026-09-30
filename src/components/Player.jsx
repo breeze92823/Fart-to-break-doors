@@ -13,6 +13,7 @@ import { makeGait, updateGait, disposeGait } from '../systems/avatarAnim.js'
 const _up = new Vector3(0, 1, 0)
 const _targetQuat = new Quaternion()
 const TURN_RATE = 0.001 // base of 1 - TURN_RATE^delta; smaller = snappier turn
+const SIT_DROP = 0.6 // m the model sinks while seated so the hips (~0.9 m up) rest on the bench
 
 // The player is the game's own character (systems/defaultCharacter.js). A
 // signed-in player's equipped Bloxity hat and back item are attached to it
@@ -93,14 +94,14 @@ export default function Player() {
   useFrame((_state, delta) => {
     const g = ref.current
     if (!g) return
-    g.position.set(player.position.x, player.position.y, player.position.z)
+    g.position.set(player.position.x, player.position.y - (player.seated ? SIT_DROP : 0), player.position.z)
     _targetQuat.setFromAxisAngle(_up, player.facing)
     g.quaternion.slerp(_targetQuat, 1 - Math.pow(TURN_RATE, delta))
 
     const gait = gaitRef.current
     if (gait) {
       const speed01 = Math.hypot(player.velocity.x, player.velocity.z) / player.moveSpeed
-      updateGait(gait, Math.min(delta, 0.1), speed01, player.grounded)
+      updateGait(gait, Math.min(delta, 0.1), speed01, player.grounded, player.seated)
     }
   })
 

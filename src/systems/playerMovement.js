@@ -1,6 +1,7 @@
 import { inputState } from './input.js'
 import { player } from './playerState.js'
 import { getYaw } from './cameraOrbit.js'
+import { stepSeated } from './seat.js'
 import { BOUNDS, GROUND_Y, PLAYER_MOVE_SPEED } from '../data/world.js'
 import { COLLIDERS } from '../data/room.js'
 
@@ -67,6 +68,7 @@ function approach2D(v, targetX, targetZ, maxDelta) {
 
 export function step(dt) {
   if (dt <= 0) return
+  if (player.seated && stepSeated()) return
 
   // Camera-relative ground basis.
   const yaw = getYaw()

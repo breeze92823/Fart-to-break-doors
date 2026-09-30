@@ -7,6 +7,8 @@ export const player = {
   position: { x: 0, y: 0, z: 0 },
   velocity: { x: 0, y: 0, z: 0 },
   grounded: true,
+  seated: false, // sitting on a bench: physics is skipped (systems/seat.js)
+  seat: null,
   facing: Math.PI, // yaw the character model faces, radians
   moveSpeed: PLAYER_MOVE_SPEED,
   dims: { radius: 0.4, height: 1.8 },
@@ -20,5 +22,7 @@ export function resetPlayer(spawn = { x: 0, y: 0, z: 0 }, facing = Math.PI) {
   player.velocity.y = 0
   player.velocity.z = 0
   player.grounded = true
+  player.seated = false
+  player.seat = null
   player.facing = facing
 }

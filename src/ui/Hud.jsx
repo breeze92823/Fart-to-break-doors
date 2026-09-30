@@ -4,6 +4,7 @@ import { login, showMenu, subscribeAuth } from '../systems/bloxity.js'
 import { formatClock, formatShort } from '../utils/format.js'
 import { CUSTOM_SIZE_MAX, MENU_BUTTONS, OFFERS, REBIRTH_BANDS, STARTER_PACK_SECONDS } from '../data/hud.js'
 import { ArrowIcon, CashIcon, GemIcon } from './icons.jsx'
+import InteractPrompt from './InteractPrompt.jsx'
 import './hud.css'
 
 // The 2D overlay above the canvas. Reads slow game state from the zustand
@@ -248,6 +249,7 @@ export default function Hud() {
       <RightColumn />
       <LeftColumn />
       <RebirthBar />
+      <InteractPrompt />
 
       <button type="button" className="corner corner--settings" aria-label="Settings" title="Settings" onClick={showMenu}>
         <span className="emoji">⚙️</span>

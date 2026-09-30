@@ -26,5 +26,8 @@ Vite + React 18 + @react-three/fiber 8 + three 0.171 + zustand. Plain JS/JSX. St
 - Move or add a solid prop in `data/room.js`, not just in `Room.jsx`, so its collider stays in sync.
 - `GAME_SLUG` in `data/bloxity.js` must match the slug registered on bloxity.io.
 
+## Key E interaction
+`INTERACTION.md` documents the hold-E prompt (2 s ring, zone registry, result popup) and tap-E system from Stone-Skipping. It is a reference for porting and is not implemented here yet. Read it only when adding interactions.
+
 ## Player progress
 Cash, Fart Power, Rebirth, Training Foods, Farts and Wins are documented in `PROGRESSION.md`. The store holds display values the HUD reads, but nothing earns or spends them yet and HUD buttons are placeholders. Read it only when working on progression.

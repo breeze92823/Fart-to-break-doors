@@ -87,8 +87,21 @@ export function makeGait(built) {
 
 // speed01: horizontal speed / max move speed. Values outside 0..1 are
 // clamped. grounded (default true) gates the airborne pose below.
-export function updateGait(gait, dt, speed01, grounded = true) {
+export function updateGait(gait, dt, speed01, grounded = true, seated = false) {
   if (!gait || dt <= 0) return
+
+  // Seated: thighs forward, arms resting. Generated rig only; an embedded
+  // clip has no sit pose, so it just idles lowered onto the bench.
+  if (seated && !gait.mixer) {
+    for (const limb of gait.limbs) {
+      gait.q.setFromAxisAngle(gait.axis, limb.kind === 'leg' ? GAIT.sitLeg : GAIT.sitArm)
+      limb.bone.quaternion.copy(limb.bind).premultiply(gait.q)
+    }
+    if (gait.spine) gait.spine.quaternion.copy(gait.spineBind)
+    gait.built.root.position.y = 0
+    gait.amp = 0
+    return
+  }
 
   const target = speed01 < 0 ? 0 : speed01 > 1 ? 1 : speed01
   // Exponential ease so a start or stop does not snap mid-stride.

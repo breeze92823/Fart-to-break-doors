@@ -86,6 +86,9 @@ export const GAIT = {
   airborneLegR: 0.3,
   airborneArm: -2.1,
   airborneLean: -0.1,
+
+  sitLeg: -1.45, // thighs forward, seated
+  sitArm: -0.5,
 }
 
 export function clamp(n, min, max) {
