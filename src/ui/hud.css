@@ -612,3 +612,28 @@
 .hud .interact-prompt.held { transform: translate(-50%, -50%) scale(1.5); padding: 0; background: transparent; backdrop-filter: none; }
 .interact-prompt.held .interact-key { background: rgba(0, 0, 0, 0.5); backdrop-filter: blur(4px); }
 .interact-prompt.held .interact-text { display: none; }
+
+/* Cash-gain popups (CashPopups.jsx); the node is a point the icon centres on,
+   moved per frame from the pool. The text hangs off its right side. */
+.cash-popup {
+  position: absolute;
+  width: 0;
+  height: 0;
+  will-change: transform, opacity;
+}
+.cash-popup__icon {
+  position: absolute;
+  left: calc(-32 * var(--u));
+  top: calc(-32 * var(--u));
+  width: calc(64 * var(--u));
+  height: calc(64 * var(--u));
+  filter: drop-shadow(0 calc(3 * var(--u)) calc(8 * var(--u)) rgba(0, 0, 0, 0.45));
+}
+.cash-popup__text {
+  position: absolute;
+  left: calc(40 * var(--u));
+  top: 0;
+  transform: translateY(-50%);
+  font-size: calc(48 * var(--u));
+  white-space: nowrap;
+}

@@ -4,6 +4,7 @@ import { player } from './playerState.js'
 import { useGameStore } from '../store/useGameStore.js'
 import { CORRIDOR, DOOR, DOORS } from '../data/world.js'
 import { DOOR_TAGS } from '../data/room.js'
+import { spawnCashPopup } from './cashPopups.js'
 
 // Door health and break animation. Each fart that lands while the player is
 // within DOOR_REACH of the first intact door takes Fart Power off its health;
@@ -52,7 +53,14 @@ function hitDoor() {
   const dz = player.position.z - DOORS[i].z
   if (dz < 0 || dz > DOOR_REACH || Math.abs(player.position.x) > CORRIDOR.halfWidth) return
   const { fartPower } = useGameStore.getState()
-  useGameStore.setState((s) => ({ doorHp: s.doorHp.map((hp, j) => (j === i ? Math.max(0, hp - fartPower) : hp)) }))
+  useGameStore.setState((s) => {
+    const hp = Math.max(0, s.doorHp[i] - fartPower)
+    return {
+      doorHp: s.doorHp.map((v, j) => (j === i ? hp : v)),
+      cash: hp === 0 ? s.cash + DOOR_TAGS[i].cash : s.cash,
+    }
+  })
+  if (useGameStore.getState().doorHp[i] === 0) spawnCashPopup(DOOR_TAGS[i].cash)
   doorAnim[i].shake = 1
   doorAnim[i].flash = 1
   doorHits.push({ door: i, damage: fartPower })

@@ -72,7 +72,14 @@ export const BUY_PADS = [
 ]
 
 // Health tag floating in front of each door, in DOORS order (display only for now).
-export const DOOR_TAGS = [20, 60, 150, 400, 1000].map((hp, i) => ({ level: i + 1, hp, max: hp, y: 1.6 }))
+// `cash` is paid to the player when that door breaks.
+export const DOOR_TAGS = [
+  [20, 5],
+  [50, 8],
+  [100, 12],
+  [200, 19],
+  [400, 25],
+].map(([hp, cash], i) => ({ level: i + 1, hp, max: hp, cash, y: 1.6 }))
 export const SPIN_PAD = { x: 19.8, z: -4.6, radius: 2, reward: 'x3' }
 export const OFFLINE_SIGN = { x: 23.2, z: -0.4, facing: -Math.PI / 2 }
 
