@@ -21,9 +21,8 @@ export const LOCKER = { width: 0.9, depth: 0.6, height: 2.5 }
 export const LOCKER_BANKS = [
   { x: 13.5, z: HALL.minZ + LOCKER.depth / 2, count: 8, facing: 0 },
   { x: -13.5, z: HALL.minZ + LOCKER.depth / 2, count: 8, facing: 0 },
-  { x: HALL.minX + LOCKER.depth / 2, z: -18, count: 7, facing: Math.PI / 2 },
-  { x: HALL.maxX - LOCKER.depth / 2, z: -18, count: 7, facing: -Math.PI / 2 },
-  { x: HALL.maxX - LOCKER.depth / 2, z: -10, count: 7, facing: -Math.PI / 2 },
+  { x: HALL.minX + LOCKER.depth / 2, z: -6, count: 5, facing: Math.PI / 2 },
+  { x: HALL.maxX - LOCKER.depth / 2, z: -5.5, count: 7, facing: -Math.PI / 2 },
 ]
 
 // Wooden crates, `level` stacks them (0 = on the floor).
@@ -57,7 +56,7 @@ export const TRAINING_SIGN = { x: 0, y: 7.5, z: TRAINING_AREA.minZ, width: 14, h
 
 // Ceiling structure: girders span X at these Z stations; wall pilasters
 // line up under them.
-export const GIRDER_Z = [-30, -22, -14, -6, 2, 10, 18, 26]
+export const GIRDER_Z = [-6, 2, 10, 18, 26]
 export const PILASTER_X = [-18, -9, 9, 18]
 
 // Axis-aligned solid boxes the player can't walk through (but can stand on

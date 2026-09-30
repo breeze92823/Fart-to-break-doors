@@ -14,8 +14,8 @@
   overflow: hidden;
 }
 
-.hud button,
-.hud input {
+/* Zero-specificity reset so each control's own class always wins. */
+:where(.hud button, .hud input) {
   pointer-events: auto;
   font: inherit;
   color: inherit;
@@ -25,7 +25,7 @@
   cursor: pointer;
 }
 
-.hud button {
+:where(.hud button) {
   transition: transform 0.08s ease;
 }
 .hud button:hover {
@@ -143,7 +143,7 @@
   align-items: center;
   justify-content: center;
   background: radial-gradient(circle at 50% 35%, #ffffff, #d8dde8);
-  border: calc(5 * var(--u)) solid var(--outline) !important;
+  border: calc(5 * var(--u)) solid var(--outline);
   box-shadow: inset 0 calc(-6 * var(--u)) 0 rgba(0, 0, 0, 0.15);
 }
 .round-btn .emoji {
@@ -151,7 +151,7 @@
 }
 .round-btn--bare {
   background: none;
-  border: none !important;
+  border: none;
   box-shadow: none;
   filter: drop-shadow(0 0 calc(10 * var(--u)) rgba(255, 255, 255, 0.9));
 }
@@ -211,7 +211,7 @@
   width: calc(96 * var(--u));
   height: calc(96 * var(--u));
   background: none;
-  border: none !important;
+  border: none;
   box-shadow: none;
 }
 .spin::before {
@@ -338,14 +338,14 @@
   margin-top: calc(2 * var(--u));
   width: calc(166 * var(--u));
   height: calc(54 * var(--u));
-  border-radius: calc(14 * var(--u)) !important;
-  background: linear-gradient(180deg, #ff4f8b, #f0115a) !important;
-  border: calc(5 * var(--u)) solid var(--outline) !important;
+  border-radius: calc(14 * var(--u));
+  background: linear-gradient(180deg, #ff4f8b, #f0115a);
+  border: calc(5 * var(--u)) solid var(--outline);
   box-shadow: inset 0 calc(-6 * var(--u)) 0 rgba(0, 0, 0, 0.18);
   font-size: calc(32 * var(--u));
 }
 .toggle--on {
-  background: linear-gradient(180deg, #6dff5a, #1fc43a) !important;
+  background: linear-gradient(180deg, #6dff5a, #1fc43a);
 }
 
 .custom-size {
@@ -391,13 +391,13 @@
 .custom-size__input {
   width: 100%;
   height: calc(56 * var(--u));
-  border-radius: calc(12 * var(--u)) !important;
-  background: #fff !important;
-  border: calc(4 * var(--u)) solid var(--outline) !important;
-  color: var(--outline) !important;
+  border-radius: calc(12 * var(--u));
+  background: #fff;
+  border: calc(4 * var(--u)) solid var(--outline);
+  color: var(--outline);
   text-align: center;
-  font-size: calc(32 * var(--u)) !important;
-  cursor: text !important;
+  font-size: calc(32 * var(--u));
+  cursor: text;
   outline: none;
 }
 .custom-size__input::placeholder {
@@ -438,16 +438,20 @@
 }
 .plus {
   position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   top: calc(266 * var(--u));
   left: calc(276 * var(--u));
   width: calc(60 * var(--u));
   height: calc(60 * var(--u));
   border-radius: 50%;
-  background: radial-gradient(circle at 50% 35%, #7dff5a, #1fc43a) !important;
-  border: calc(5 * var(--u)) solid var(--outline) !important;
+  background: radial-gradient(circle at 50% 35%, #7dff5a, #1fc43a);
+  border: calc(5 * var(--u)) solid var(--outline);
   box-shadow: 0 0 0 calc(3 * var(--u)) #fff inset;
-  font-size: calc(52 * var(--u)) !important;
-  line-height: calc(46 * var(--u));
+  font-size: calc(56 * var(--u));
+  line-height: 1;
+  padding-bottom: calc(6 * var(--u));
   -webkit-text-stroke: calc(5 * var(--u)) var(--outline);
   paint-order: stroke fill;
 }
@@ -462,9 +466,9 @@
 .menu-btn {
   width: calc(90 * var(--u));
   height: calc(90 * var(--u));
-  border-radius: calc(22 * var(--u)) !important;
-  background: radial-gradient(circle at 50% 30%, #79d4ff, #1f86f0 70%) !important;
-  border: calc(5 * var(--u)) solid var(--outline) !important;
+  border-radius: calc(22 * var(--u));
+  background: radial-gradient(circle at 50% 30%, #79d4ff, #1f86f0 70%);
+  border: calc(5 * var(--u)) solid var(--outline);
   box-shadow:
     inset 0 0 0 calc(4 * var(--u)) #fff,
     inset 0 calc(-8 * var(--u)) 0 calc(4 * var(--u)) rgba(0, 0, 0, 0.15);
@@ -476,7 +480,7 @@
   font-size: calc(56 * var(--u));
 }
 .menu-btn:nth-child(2) {
-  background: radial-gradient(circle at 50% 30%, #ff9bf0, #d62bd6 70%) !important;
+  background: radial-gradient(circle at 50% 30%, #ff9bf0, #d62bd6 70%);
 }
 
 /* ---------- Rebirth progress bar (bottom centre) ---------- */

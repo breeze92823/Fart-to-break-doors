@@ -212,15 +212,13 @@ function WallFixtures() {
   const m = materials()
   // [x, z, yaw] for each wall-mounted flood lamp; yaw turns the lamp face into the room.
   const lamps = [
-    ...[-26, -10, 6, 22].map((z) => [HALL.minX + 0.3, z, Math.PI / 2]),
-    ...[-26, -10, 6, 22].map((z) => [HALL.maxX - 0.3, z, -Math.PI / 2]),
+    ...[-6, 6, 22].map((z) => [HALL.minX + 0.3, z, Math.PI / 2]),
+    ...[-6, 6, 22].map((z) => [HALL.maxX - 0.3, z, -Math.PI / 2]),
     ...[-13.5, 13.5].map((x) => [x, HALL.maxZ - 0.3, Math.PI]),
     ...[-13.5, 13.5].map((x) => [x, HALL.minZ + 0.3, 0]),
   ]
   const pipes = [
-    [HALL.minX + 0.35, -31.5],
     [HALL.minX + 0.35, -3.2],
-    [HALL.maxX - 0.35, -31.5],
     [HALL.maxX - 0.35, -3.2],
     [-5.6, HALL.minZ + 0.35],
     [5.6, HALL.minZ + 0.35],
