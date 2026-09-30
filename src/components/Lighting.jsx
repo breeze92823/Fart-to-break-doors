@@ -2,14 +2,15 @@ import { useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
 import { player } from '../systems/playerState.js'
 
-// Sun offset from its target; the shadow frustum only covers SHADOW_EXTENT
-// around the player, so the light rig follows them rather than trying to
-// shadow the whole world at once.
-const SUN_OFFSET = [30, 45, 20]
+// Overhead key light offset from its target; the shadow frustum only covers
+// SHADOW_EXTENT around the player, so the light rig follows them rather than
+// trying to shadow the whole hall at once. The ceiling and roof steel don't
+// cast shadows, so this reads as the fluorescent panels lighting the floor.
+const SUN_OFFSET = [8, 40, 12]
 const SHADOW_EXTENT = 40
 
-// Bright daylight: sky/ground bounce keeps colours saturated, plus one
-// shadow-casting sun.
+// Bright, cool indoor light: a strong hemisphere fill (so walls read evenly)
+// plus one shadow-casting overhead key.
 export default function Lighting() {
   const sun = useRef()
 
@@ -24,12 +25,12 @@ export default function Lighting() {
 
   return (
     <>
-      <hemisphereLight args={['#e4f3ff', '#b9a98c', 0.95]} />
-      <ambientLight intensity={0.3} />
+      <hemisphereLight args={['#f4f8ff', '#8f9ec0', 1.25]} />
+      <ambientLight intensity={0.35} />
       <directionalLight
         ref={sun}
-        color="#fff6e6"
-        intensity={2.1}
+        color="#ffffff"
+        intensity={1.5}
         castShadow
         shadow-mapSize={[2048, 2048]}
         shadow-camera-left={-SHADOW_EXTENT}
