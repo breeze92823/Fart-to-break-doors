@@ -26,8 +26,13 @@ function recomputeMove() {
   inputState.move.z = z
 }
 
+// Typing in a HUD text field must not move the player.
+function isTextField(target) {
+  return target instanceof HTMLElement && (target.isContentEditable || target.tagName === 'INPUT' || target.tagName === 'TEXTAREA')
+}
+
 function onKeyDown(e) {
-  if (e.repeat) return
+  if (e.repeat || isTextField(e.target)) return
   held.add(e.code)
   pressed.add(e.code)
   if (e.code === 'Space') inputState.jump = true
