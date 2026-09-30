@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { bellyForPower } from '../data/hud.js'
 import { DOOR_TAGS } from '../data/room.js'
 import { TUTORIAL_DONE_STEP } from '../data/tutorial.js'
 
@@ -83,6 +84,12 @@ export const useGameStore = create((set) => ({
   autoBreak: false,
   nearDoor: false, // within fart reach of the first intact door (tutorial "Click to Fart")
   inDoorArea: false, // player is past the hazard stripe (shows the Back button)
-  bellySize: 1, // belly/waist multiplier (systems/belly.js BELLY_SIZE), synced to other players
+  bellySize: 1, // body fatness and height multiplier (systems/belly.js BELLY_SIZE), follows fartPower (subscription below), synced to other players
   customSize: null, // null = default size, else 1..CUSTOM_SIZE_MAX
 }))
+
+// The character grows fatter and taller with Fart Power.
+useGameStore.setState((s) => ({ bellySize: bellyForPower(s.fartPower) }))
+useGameStore.subscribe((s, prev) => {
+  if (s.fartPower !== prev.fartPower) useGameStore.setState({ bellySize: bellyForPower(s.fartPower) })
+})
