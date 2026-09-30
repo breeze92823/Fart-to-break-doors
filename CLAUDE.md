@@ -16,6 +16,8 @@ Vite + React 18 + @react-three/fiber 8 + three 0.171 + zustand. Plain JS/JSX. St
 - `store/useGameStore.js` — slow game state: `avatarLoaded`, plus the values the HUD shows (cash, fartPower, rebirths, ...)
 - `materials/` — `groundMaterial.js` (procedural tiled floor), `roomTextures.js` (canvas textures for lockers, crates, door, signs, decals)
 
+`LANDMARKS.md` names every area and fixture in the hall (`DOOR`, `FART-PAD`, `TRAINING-PIT`, ...) with coordinates; keep it in step with `data/room.js` and `data/world.js`.
+
 ## Rules
 - The HUD root is `pointer-events: none`; only its controls opt back in, so camera drag reaches the canvas. `input.js` ignores keys typed into text fields.
 - One tick: `GameLoop.jsx`. Per-frame state (player) is a mutated singleton in `systems/playerState.js`, not zustand.
