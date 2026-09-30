@@ -151,7 +151,8 @@ export function chevronTexture() {
   })
 }
 
-// Fluorescent panel: white diffuser with dark slots.
+// Fluorescent fitting: bright white diffuser, thin grey rim and a few dark
+// cross-bars, like the tube strips on the reference ceiling.
 export function lightPanelTexture() {
   return make('lightPanel', 256, 96, (ctx, w, h) => {
     ctx.fillStyle = '#ffffff'
@@ -164,34 +165,64 @@ export function lightPanelTexture() {
   })
 }
 
-// The olive training-zone floor with a soft yellow glow inside its rim.
+// Training-zone ring floor: slate lavender-blue with fine speckle, a soft
+// yellow glow inside the outer rim and a thin pale line on the very edge.
 export function trainingFloorTexture() {
   return make('trainingFloor', 512, 512, (ctx, w, h) => {
     const rand = seededRandom(3)
-    ctx.fillStyle = '#7d8471'
+    ctx.fillStyle = '#8c9bd2'
     ctx.fillRect(0, 0, w, h)
-    for (let i = 0; i < 3000; i++) {
-      ctx.fillStyle = rand() < 0.5 ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.05)'
+    for (let i = 0; i < 3500; i++) {
+      ctx.fillStyle = rand() < 0.5 ? 'rgba(20,30,90,0.07)' : 'rgba(255,255,255,0.06)'
       ctx.fillRect(rand() * w, rand() * h, 2, 2)
     }
-    const glow = 46
-    const sides = [
-      [0, 0, w, glow, 0, 0, 0, glow],
-      [0, h - glow, w, glow, 0, h, 0, h - glow],
-      [0, 0, glow, h, 0, 0, glow, 0],
-      [w - glow, 0, glow, h, w, 0, w - glow, 0],
-    ]
-    for (const [x, y, sw, sh, gx0, gy0, gx1, gy1] of sides) {
-      const g = ctx.createLinearGradient(gx0, gy0, gx1, gy1)
-      g.addColorStop(0, 'rgba(255, 238, 120, 0.85)')
-      g.addColorStop(1, 'rgba(255, 238, 120, 0)')
-      ctx.fillStyle = g
-      ctx.fillRect(x, y, sw, sh)
-    }
-    ctx.strokeStyle = '#fff3a0'
+    edgeGlow(ctx, w, h, 30, 'rgba(255, 244, 150, 0.8)')
+    ctx.strokeStyle = '#fffbd0'
+    ctx.lineWidth = 5
+    ctx.strokeRect(2.5, 2.5, w - 5, h - 5)
+  })
+}
+
+// Bright white pit floor with a strong yellow glow creeping in from every edge.
+export function trainingPitTexture() {
+  return make('trainingPit', 256, 512, (ctx, w, h) => {
+    ctx.fillStyle = '#fbfdff'
+    ctx.fillRect(0, 0, w, h)
+    edgeGlow(ctx, w, h, 40, 'rgba(255, 236, 90, 0.95)')
+    ctx.strokeStyle = '#fff6a0'
     ctx.lineWidth = 6
     ctx.strokeRect(3, 3, w - 6, h - 6)
   })
+}
+
+// Vertical light curtain: opaque yellow at the floor fading to nothing.
+export function glowCurtainTexture() {
+  return make('glowCurtain', 4, 64, (ctx, w, h) => {
+    const g = ctx.createLinearGradient(0, h, 0, 0)
+    g.addColorStop(0, 'rgba(255, 240, 110, 0.85)')
+    g.addColorStop(0.5, 'rgba(255, 240, 110, 0.25)')
+    g.addColorStop(1, 'rgba(255, 240, 110, 0)')
+    ctx.fillStyle = g
+    ctx.fillRect(0, 0, w, h)
+  })
+}
+
+// Gradient of `color` fading to transparent inward from all four edges.
+function edgeGlow(ctx, w, h, size, color) {
+  const clear = color.replace(/[\d.]+\)$/, '0)')
+  const sides = [
+    [0, 0, w, size, 0, 0, 0, size],
+    [0, h - size, w, size, 0, h, 0, h - size],
+    [0, 0, size, h, 0, 0, size, 0],
+    [w - size, 0, size, h, w, 0, w - size, 0],
+  ]
+  for (const [x, y, sw, sh, gx0, gy0, gx1, gy1] of sides) {
+    const g = ctx.createLinearGradient(gx0, gy0, gx1, gy1)
+    g.addColorStop(0, color)
+    g.addColorStop(1, clear)
+    ctx.fillStyle = g
+    ctx.fillRect(x, y, sw, sh)
+  }
 }
 
 // Chunky outlined cartoon lettering on a transparent background.
@@ -246,5 +277,373 @@ export function leaderboardTexture(header) {
       ctx.fillStyle = '#6b7fa6'
       ctx.fillText('- - -', 104, y + 20)
     }
+  })
+}
+
+// Egg skins for the shop, painted on an equirectangular canvas.
+export function eggTexture(kind) {
+  return make(`egg:${kind}`, 256, 256, (ctx, w, h) => {
+    const rand = seededRandom(kind.length * 17 + 5)
+    const base = {
+      plain: ['#fbf8f2', '#e9e2d4'],
+      gold: ['#fff1c0', '#e8c66a'],
+      nest: ['#a89476', '#7c6a52'],
+      galaxy: ['#6a4bd8', '#160d52'],
+    }[kind]
+    const g = ctx.createLinearGradient(0, 0, 0, h)
+    g.addColorStop(0, base[0])
+    g.addColorStop(1, base[1])
+    ctx.fillStyle = g
+    ctx.fillRect(0, 0, w, h)
+    if (kind === 'plain') {
+      ctx.fillStyle = 'rgba(150,90,60,0.55)'
+      for (let i = 0; i < 6; i++) ctx.fillRect(rand() * w, h * 0.35 + rand() * h * 0.4, 5, 4)
+    } else if (kind === 'nest') {
+      ctx.fillStyle = 'rgba(50,35,20,0.5)'
+      for (let i = 0; i < 40; i++) {
+        ctx.beginPath()
+        ctx.arc(rand() * w, rand() * h, 3 + rand() * 6, 0, Math.PI * 2)
+        ctx.fill()
+      }
+    } else if (kind === 'gold') {
+      ctx.fillStyle = 'rgba(255,255,255,0.7)'
+      for (let i = 0; i < 25; i++) ctx.fillRect(rand() * w, rand() * h, 3, 3)
+    } else {
+      for (let i = 0; i < 220; i++) {
+        ctx.fillStyle = `rgba(255,255,255,${0.3 + rand() * 0.7})`
+        const r = rand() < 0.1 ? 3 : 1.5
+        ctx.fillRect(rand() * w, rand() * h, r, r)
+      }
+      for (let i = 0; i < 4; i++) {
+        const cx = rand() * w
+        const cy = rand() * h
+        const g2 = ctx.createRadialGradient(cx, cy, 0, cx, cy, 90)
+        g2.addColorStop(0, 'rgba(180,90,255,0.35)')
+        g2.addColorStop(1, 'rgba(180,90,255,0)')
+        ctx.fillStyle = g2
+        ctx.fillRect(0, 0, w, h)
+      }
+      // Crescent moon.
+      ctx.fillStyle = '#f5f1ff'
+      ctx.beginPath()
+      ctx.arc(w * 0.3, h * 0.42, 34, 0, Math.PI * 2)
+      ctx.fill()
+      ctx.fillStyle = '#2a1a78'
+      ctx.beginPath()
+      ctx.arc(w * 0.3 + 14, h * 0.42 - 5, 32, 0, Math.PI * 2)
+      ctx.fill()
+    }
+  })
+}
+
+// Floating price label: currency icon plus outlined text, drawn on a
+// transparent canvas for a sprite. `gems` swaps the Cash stack for the
+// white hexagon and white text.
+export function priceTagTexture(text, gems = false) {
+  return make(`price:${text}:${gems}`, 512, 160, (ctx, w, h) => {
+    ctx.clearRect(0, 0, w, h)
+    const iconX = 60
+    const cy = h / 2
+    ctx.lineJoin = 'round'
+    if (gems) {
+      ctx.fillStyle = '#fff'
+      ctx.strokeStyle = '#111'
+      ctx.lineWidth = 8
+      ctx.beginPath()
+      for (let i = 0; i < 6; i++) {
+        const a = (Math.PI / 3) * i + Math.PI / 6
+        ctx.lineTo(iconX + Math.cos(a) * 50, cy + Math.sin(a) * 50)
+      }
+      ctx.closePath()
+      ctx.stroke()
+      ctx.fill()
+      ctx.fillStyle = '#111'
+      ctx.fillRect(iconX - 15, cy - 15, 30, 30)
+    } else {
+      ctx.strokeStyle = '#0b2a12'
+      ctx.lineWidth = 7
+      const face = (pts, fill) => {
+        ctx.beginPath()
+        pts.forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)))
+        ctx.closePath()
+        ctx.fillStyle = fill
+        ctx.stroke()
+        ctx.fill()
+      }
+      face([[iconX, cy - 44], [iconX + 46, cy - 22], [iconX, cy], [iconX - 46, cy - 22]], '#7fe07a')
+      face([[iconX - 46, cy - 22], [iconX, cy], [iconX, cy + 46], [iconX - 46, cy + 24]], '#2fa545')
+      face([[iconX + 46, cy - 22], [iconX, cy], [iconX, cy + 46], [iconX + 46, cy + 24]], '#1e7d34')
+    }
+    ctx.font = '900 96px "Arial Black", "Segoe UI Black", Impact, sans-serif'
+    ctx.textAlign = 'left'
+    ctx.textBaseline = 'middle'
+    ctx.lineWidth = 16
+    ctx.strokeStyle = '#111'
+    ctx.strokeText(text, 130, cy + 4)
+    ctx.fillStyle = gems ? '#ffffff' : '#41ff5a'
+    ctx.fillText(text, 130, cy + 4)
+  })
+}
+
+// Wooden signpost plank: "You earn Cash offline!" on brown boards with a
+// little Cash stack at each end.
+export function offlineSignTexture() {
+  return make('offlineSign', 512, 256, (ctx, w, h) => {
+    const rand = seededRandom(9)
+    const g = ctx.createLinearGradient(0, 0, 0, h)
+    g.addColorStop(0, '#b45f31')
+    g.addColorStop(1, '#8a3f1e')
+    ctx.fillStyle = g
+    ctx.fillRect(0, 0, w, h)
+    ctx.fillStyle = 'rgba(40,15,5,0.35)'
+    for (let y = 0; y <= h; y += h / 2) ctx.fillRect(0, y - 2, w, 4)
+    for (let i = 0; i < 260; i++) {
+      ctx.fillStyle = rand() < 0.5 ? 'rgba(60,25,8,0.18)' : 'rgba(255,210,150,0.10)'
+      ctx.fillRect(rand() * w, rand() * h, 20 + rand() * 60, 2)
+    }
+    ctx.strokeStyle = '#5a2a12'
+    ctx.lineWidth = 12
+    ctx.strokeRect(6, 6, w - 12, h - 12)
+    const cash = (x, y) => {
+      ctx.fillStyle = '#39c957'
+      ctx.strokeStyle = '#0b3d1a'
+      ctx.lineWidth = 4
+      ctx.fillRect(x, y, 46, 30)
+      ctx.strokeRect(x, y, 46, 30)
+      ctx.fillStyle = '#c9ffd2'
+      ctx.beginPath()
+      ctx.arc(x + 23, y + 15, 8, 0, Math.PI * 2)
+      ctx.fill()
+    }
+    cash(28, 40)
+    cash(w - 74, 40)
+    ctx.font = '800 62px "Arial Rounded MT Bold", "Arial Black", sans-serif'
+    ctx.textAlign = 'center'
+    ctx.textBaseline = 'middle'
+    ctx.lineJoin = 'round'
+    ctx.lineWidth = 12
+    ctx.strokeStyle = '#3a1808'
+    ctx.fillStyle = '#ffffff'
+    for (const [t, y] of [['You earn Cash', 88], ['offline!', 176]]) {
+      ctx.strokeText(t, w / 2, y)
+      ctx.fillText(t, w / 2, y)
+    }
+  })
+}
+
+// Two-line pad label: small heading, then a Cash icon and the price.
+export function padLabelTexture(title, price) {
+  return make(`padLabel:${title}:${price}`, 512, 256, (ctx, w, h) => {
+    ctx.clearRect(0, 0, w, h)
+    ctx.lineJoin = 'round'
+    ctx.textBaseline = 'middle'
+    ctx.textAlign = 'center'
+    ctx.font = '900 66px "Arial Black", Impact, sans-serif'
+    ctx.lineWidth = 18
+    ctx.strokeStyle = '#0b2a12'
+    ctx.strokeText(title, w / 2, 62)
+    ctx.fillStyle = '#5bff4a'
+    ctx.fillText(title, w / 2, 62)
+    // Cash stack
+    const ix = 90
+    const cy = 170
+    ctx.lineWidth = 7
+    ctx.strokeStyle = '#0b2a12'
+    const face = (pts, fill) => {
+      ctx.beginPath()
+      pts.forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)))
+      ctx.closePath()
+      ctx.fillStyle = fill
+      ctx.stroke()
+      ctx.fill()
+    }
+    face([[ix, cy - 44], [ix + 46, cy - 22], [ix, cy], [ix - 46, cy - 22]], '#7fe07a')
+    face([[ix - 46, cy - 22], [ix, cy], [ix, cy + 46], [ix - 46, cy + 24]], '#2fa545')
+    face([[ix + 46, cy - 22], [ix, cy], [ix, cy + 46], [ix + 46, cy + 24]], '#1e7d34')
+    ctx.textAlign = 'left'
+    ctx.font = '900 120px "Arial Black", Impact, sans-serif'
+    ctx.lineWidth = 20
+    ctx.strokeText(price, 170, cy + 6)
+    ctx.fillStyle = '#5bff4a'
+    ctx.fillText(price, 170, cy + 6)
+  })
+}
+
+// Spin pad marker: "FREE!" over a rainbow wheel with its "x3" reward.
+export function spinTagTexture(reward) {
+  return make(`spinTag:${reward}`, 256, 384, (ctx, w, h) => {
+    ctx.clearRect(0, 0, w, h)
+    ctx.lineJoin = 'round'
+    ctx.textAlign = 'center'
+    ctx.textBaseline = 'middle'
+    ctx.font = '900 72px "Arial Black", Impact, sans-serif'
+    ctx.lineWidth = 16
+    ctx.strokeStyle = '#06323a'
+    ctx.strokeText('FREE!', w / 2, 52)
+    ctx.fillStyle = '#39f0e0'
+    ctx.fillText('FREE!', w / 2, 52)
+    const cx = w / 2
+    const cy = 215
+    const r = 92
+    const grad = ctx.createConicGradient(0, cx, cy)
+    ;['#ff2a2a', '#ff8a00', '#ffe600', '#2fd12f', '#16c3ff', '#3d5bff', '#b02bff', '#ff2ab4', '#ff2a2a'].forEach((c, i, a) => grad.addColorStop(i / (a.length - 1), c))
+    ctx.fillStyle = grad
+    ctx.beginPath()
+    ctx.arc(cx, cy, r, 0, Math.PI * 2)
+    ctx.fill()
+    ctx.lineWidth = 8
+    ctx.strokeStyle = '#fff'
+    ctx.stroke()
+    ctx.font = '900 92px "Arial Black", Impact, sans-serif'
+    ctx.lineWidth = 18
+    ctx.strokeStyle = '#111'
+    ctx.strokeText(reward, cx + 30, cy + 78)
+    ctx.fillStyle = '#fff'
+    ctx.fillText(reward, cx + 30, cy + 78)
+  })
+}
+
+// Door health tag: "Level: N" over a green bar reading "hp/max".
+export function doorTagTexture(level, hp, max) {
+  return make(`doorTag:${level}:${hp}:${max}`, 512, 160, (ctx, w, h) => {
+    ctx.clearRect(0, 0, w, h)
+    ctx.textAlign = 'center'
+    ctx.textBaseline = 'middle'
+    ctx.lineJoin = 'round'
+    ctx.font = '800 62px "Arial Rounded MT Bold", "Arial Black", sans-serif'
+    ctx.lineWidth = 12
+    ctx.strokeStyle = '#111'
+    ctx.strokeText(`Level: ${level}`, w / 2, 40)
+    ctx.fillStyle = '#fff'
+    ctx.fillText(`Level: ${level}`, w / 2, 40)
+    const bx = 30
+    const by = 84
+    const bw = w - 60
+    const bh = 56
+    const r = bh / 2
+    const pill = (x, y, ww, hh) => {
+      ctx.beginPath()
+      ctx.moveTo(x + r, y)
+      ctx.arcTo(x + ww, y, x + ww, y + hh, r)
+      ctx.arcTo(x + ww, y + hh, x, y + hh, r)
+      ctx.arcTo(x, y + hh, x, y, r)
+      ctx.arcTo(x, y, x + ww, y, r)
+      ctx.closePath()
+    }
+    pill(bx, by, bw, bh)
+    ctx.fillStyle = '#12351d'
+    ctx.fill()
+    const frac = Math.max(0.06, Math.min(1, hp / max))
+    pill(bx, by, bw * frac, bh)
+    const g = ctx.createLinearGradient(0, by, 0, by + bh)
+    g.addColorStop(0, '#5dff8a')
+    g.addColorStop(1, '#14c85a')
+    ctx.fillStyle = g
+    ctx.fill()
+    pill(bx, by, bw, bh)
+    ctx.lineWidth = 6
+    ctx.strokeStyle = '#111'
+    ctx.stroke()
+    ctx.font = '800 40px "Arial Rounded MT Bold", "Arial Black", sans-serif'
+    ctx.lineWidth = 8
+    ctx.strokeText(`${hp}/${max}`, w / 2, by + bh / 2 + 2)
+    ctx.fillStyle = '#fff'
+    ctx.fillText(`${hp}/${max}`, w / 2, by + bh / 2 + 2)
+  })
+}
+
+// Glowing portal interior: pink-white core fading to violet at the edges.
+export function portalGlowTexture() {
+  return make('portalGlow', 128, 256, (ctx, w, h) => {
+    const rand = seededRandom(21)
+    const g = ctx.createLinearGradient(0, 0, 0, h)
+    g.addColorStop(0, '#ff8cf2')
+    g.addColorStop(0.55, '#e83fe6')
+    g.addColorStop(1, '#a01ad8')
+    ctx.fillStyle = g
+    ctx.fillRect(0, 0, w, h)
+    const core = ctx.createRadialGradient(w / 2, h * 0.5, 4, w / 2, h * 0.5, h * 0.55)
+    core.addColorStop(0, 'rgba(255,235,255,0.9)')
+    core.addColorStop(1, 'rgba(255,235,255,0)')
+    ctx.fillStyle = core
+    ctx.fillRect(0, 0, w, h)
+    for (let i = 0; i < 18; i++) {
+      ctx.fillStyle = `rgba(255,255,255,${0.05 + rand() * 0.1})`
+      ctx.fillRect(rand() * w, 0, 2 + rand() * 4, h)
+    }
+  })
+}
+
+// Pink pool of light spilling onto the floor in front of the portal.
+export function portalFloorGlowTexture() {
+  return make('portalFloor', 128, 128, (ctx, w, h) => {
+    ctx.clearRect(0, 0, w, h)
+    const g = ctx.createRadialGradient(w / 2, h / 2, 4, w / 2, h / 2, w / 2)
+    g.addColorStop(0, 'rgba(255, 90, 240, 0.85)')
+    g.addColorStop(1, 'rgba(255, 90, 240, 0)')
+    ctx.fillStyle = g
+    ctx.fillRect(0, 0, w, h)
+  })
+}
+
+// "PORTAL" title in glowing magenta lettering.
+export function portalTitleTexture() {
+  return signTexture('PORTAL', { fill: '#ff86f6', fill2: '#d21ce0', stroke: '#2c0a44', width: 512, height: 160 })
+}
+
+// Requirement rows: a crown and a ball icon, each with its number.
+export function portalReqTexture(rebirths, power) {
+  return make(`portalReq:${rebirths}:${power}`, 256, 192, (ctx, w, h) => {
+    ctx.clearRect(0, 0, w, h)
+    ctx.lineJoin = 'round'
+    ctx.textBaseline = 'middle'
+    ctx.textAlign = 'left'
+    const number = (n, y) => {
+      ctx.font = '900 74px "Arial Black", Impact, sans-serif'
+      ctx.lineWidth = 14
+      ctx.strokeStyle = '#111'
+      ctx.strokeText(String(n), 130, y)
+      ctx.fillStyle = '#fff'
+      ctx.fillText(String(n), 130, y)
+    }
+    // crown
+    const cy = 50
+    ctx.beginPath()
+    ctx.moveTo(30, cy + 26)
+    ctx.lineTo(22, cy - 24)
+    ctx.lineTo(46, cy - 4)
+    ctx.lineTo(64, cy - 32)
+    ctx.lineTo(82, cy - 4)
+    ctx.lineTo(106, cy - 24)
+    ctx.lineTo(98, cy + 26)
+    ctx.closePath()
+    ctx.fillStyle = '#ffcf2a'
+    ctx.strokeStyle = '#5a3a00'
+    ctx.lineWidth = 7
+    ctx.stroke()
+    ctx.fill()
+    number(rebirths, cy)
+    // ball
+    const by = 146
+    ctx.lineWidth = 7
+    ctx.strokeStyle = '#111'
+    ctx.beginPath()
+    ctx.arc(64, by, 34, Math.PI, 0)
+    ctx.closePath()
+    ctx.fillStyle = '#ee2a3a'
+    ctx.fill()
+    ctx.stroke()
+    ctx.beginPath()
+    ctx.arc(64, by, 34, 0, Math.PI)
+    ctx.closePath()
+    ctx.fillStyle = '#f4f4f4'
+    ctx.fill()
+    ctx.stroke()
+    ctx.beginPath()
+    ctx.arc(64, by, 10, 0, Math.PI * 2)
+    ctx.fillStyle = '#fff'
+    ctx.fill()
+    ctx.stroke()
+    number(power, by)
   })
 }

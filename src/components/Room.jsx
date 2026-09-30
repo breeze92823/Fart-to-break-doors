@@ -1,30 +1,65 @@
-import { BoxGeometry, CylinderGeometry, MeshBasicMaterial, MeshStandardMaterial, PlaneGeometry } from 'three'
+import { useRef } from 'react'
+import { useFrame } from '@react-three/fiber'
+import {
+  AdditiveBlending,
+  BoxGeometry,
+  CylinderGeometry,
+  DoubleSide,
+  MeshBasicMaterial,
+  MeshStandardMaterial,
+  PlaneGeometry,
+  SphereGeometry,
+  SpriteMaterial,
+} from 'three'
 import { CORRIDOR, DOOR, HALL } from '../data/world.js'
 import {
   BENCH,
+  BUY_PADS,
+  DOOR_TAG,
   CRATES,
+  EGG_MAT,
+  EGG_PEDESTAL,
+  EGGS,
   GIRDER_Z,
   LEADERBOARD,
   LEADERBOARDS,
   LOCKER,
   LOCKER_BANKS,
+  OFFLINE_SIGN,
+  PORTAL,
   PILASTER_X,
+  ROUND_TABLE,
+  ROUND_TABLES,
   SINK,
+  SPIN_PAD,
   TABLE,
   TABLES,
   TRAINING_AREA,
-  TRAINING_SIGN,
+  TRAINING_PIT,
+  TRAINING_SIGNS,
 } from '../data/room.js'
 import {
   chevronTexture,
   crateTexture,
   doorPlankTexture,
+  doorTagTexture,
+  eggTexture,
+  glowCurtainTexture,
   hazardTexture,
   leaderboardTexture,
   lightPanelTexture,
   lockerTexture,
+  offlineSignTexture,
+  padLabelTexture,
+  portalReqTexture,
+  portalTitleTexture,
+  portalFloorGlowTexture,
+  portalGlowTexture,
+  priceTagTexture,
   signTexture,
+  spinTagTexture,
   trainingFloorTexture,
+  trainingPitTexture,
 } from '../materials/roomTextures.js'
 
 // The prison-cafeteria hall: steel-blue walls and roof trusses, fluorescent
@@ -36,6 +71,9 @@ import {
 const UNIT = new BoxGeometry(1, 1, 1)
 const PIPE = new CylinderGeometry(1, 1, 1, 12)
 const PLANE = new PlaneGeometry(1, 1)
+const SPHERE = new SphereGeometry(1, 32, 24)
+const CAP = new SphereGeometry(1, 24, 12, 0, Math.PI * 2, 0, Math.PI / 2)
+const DISC = new CylinderGeometry(1, 1, 1, 32)
 
 const W = HALL.maxX - HALL.minX
 const D = HALL.maxZ - HALL.minZ
@@ -59,6 +97,27 @@ function materials() {
     girder: std('#4c6fc6', { roughness: 0.55, metalness: 0.25 }),
     duct: std('#bcd0f0', { roughness: 0.5, metalness: 0.3 }),
     frame: std('#b5cbf0'),
+    curb: std('#9cc4f5', { roughness: 0.6 }),
+    eggMat: std('#586590', { roughness: 0.9 }),
+    pedestalRim: std('#2b3a66', { roughness: 0.4, metalness: 0.3 }),
+    pedestalTop: std('#f4f7ff', { roughness: 0.3 }),
+    pedestalBand: std('#5fb8ff', { roughness: 0.3, emissive: '#2f7fc8', emissiveIntensity: 0.4 }),
+    nestCap: std('#4a3a2a', { roughness: 0.9 }),
+    padSnow: std('#f1f6ff', { roughness: 0.35 }),
+    roundTable: std('#eef3ff', { roughness: 0.35, metalness: 0.15 }),
+    offlineSign: new MeshBasicMaterial({ map: offlineSignTexture(), toneMapped: false }),
+    spinFill: new MeshBasicMaterial({ color: '#1f8f1f', transparent: true, opacity: 0.35, toneMapped: false }),
+    spinRing: new MeshBasicMaterial({ color: '#3dff3d', toneMapped: false }),
+    bread: std('#e88a2c', { roughness: 0.55 }),
+    breadCut: std('#ffe3a0', { roughness: 0.5 }),
+    gas: new MeshStandardMaterial({ color: '#c39a3c', emissive: '#7a5512', emissiveIntensity: 0.35, roughness: 0.9, transparent: true, opacity: 0.6, depthWrite: false }),
+    portalFrame: std('#3b3f5c', { roughness: 0.85 }),
+    portalTrim: new MeshBasicMaterial({ color: '#ff5df0', toneMapped: false }),
+    portalGlow: new MeshBasicMaterial({ map: portalGlowTexture(), toneMapped: false }),
+    portalFloor: new MeshBasicMaterial({ map: portalFloorGlowTexture(), transparent: true, depthWrite: false, blending: AdditiveBlending, toneMapped: false }),
+    tableSpot: std('#ffffff', { roughness: 0.4 }),
+    picnicTop: std('#98a4dc', { roughness: 0.55, metalness: 0.2 }),
+    picnicLeg: std('#6470b0', { roughness: 0.55, metalness: 0.2 }),
     lampHousing: std('#dfe7f4'),
     light: new MeshBasicMaterial({ map: lightPanelTexture(), toneMapped: false }),
     pipe: std('#93b2e6', { roughness: 0.45, metalness: 0.35 }),
@@ -73,6 +132,15 @@ function materials() {
     stone: std('#3b465e', { roughness: 0.9 }),
     stoneCap: std('#56627c', { roughness: 0.9 }),
     trainingFloor: decal(trainingFloorTexture(), { transparent: false }),
+    trainingPit: decal(trainingPitTexture(), { transparent: false, polygonOffsetFactor: -4, toneMapped: false }),
+    glowCurtain: new MeshBasicMaterial({
+      map: glowCurtainTexture(),
+      transparent: true,
+      depthWrite: false,
+      blending: AdditiveBlending,
+      side: DoubleSide,
+      toneMapped: false,
+    }),
     hazard: decal(hazardTexture(16), { transparent: false }),
     chevrons: decal(chevronTexture(), { toneMapped: false }),
   }
@@ -158,8 +226,9 @@ function Roof() {
   const cx = (HALL.minX + HALL.maxX) / 2
   const braceRun = 4.5
   const braceLow = H - 4.2
-  const lightX = [-19, -6.5, 6.5, 19]
-  const lightZ = GIRDER_Z.map((z) => z + 4).filter((z) => z < HALL.maxZ - 1)
+  const lightX = [-19.5, -6.5, 6.5, 19.5]
+  // Two rows of strips in every bay between girders.
+  const lightZ = GIRDER_Z.flatMap((z) => [z + 2.5, z + 5.5]).filter((z) => z < HALL.maxZ - 1)
   const ductX = [-12.8, 12.8]
   const ductY = H - 2.2
 
@@ -179,14 +248,14 @@ function Roof() {
         <Box key={x} p={[x, H - 0.2, (HALL.minZ + HALL.maxZ) / 2]} s={[0.3, 0.4, D]} m={m.girder} />
       ))}
 
-      {/* Hanging fluorescent panels */}
+      {/* Hanging fluorescent tube strips */}
       {lightX.flatMap((x) =>
         lightZ.map((z) => (
-          <group key={`${x}:${z}`} position={[x, H - 1.5, z]}>
-            <Box p={[0, 0.12, 0]} s={[3.6, 0.2, 1.4]} m={m.lampHousing} />
-            <mesh geometry={PLANE} material={m.light} position={[0, 0.01, 0]} scale={[3.4, 1.2, 1]} rotation={[Math.PI / 2, 0, 0]} />
-            <Box p={[-1.4, 0.8, 0]} s={[0.04, 1.2, 0.04]} m={m.tableLeg} />
-            <Box p={[1.4, 0.8, 0]} s={[0.04, 1.2, 0.04]} m={m.tableLeg} />
+          <group key={`${x}:${z}`} position={[x, H - 1.3, z]}>
+            <Box p={[0, 0.1, 0]} s={[9, 0.16, 0.7]} m={m.lampHousing} />
+            <mesh geometry={PLANE} material={m.light} position={[0, 0.01, 0]} scale={[8.8, 0.55, 1]} rotation={[Math.PI / 2, 0, 0]} />
+            <Box p={[-3.6, 0.7, 0]} s={[0.04, 1, 0.04]} m={m.tableLeg} />
+            <Box p={[3.6, 0.7, 0]} s={[0.04, 1, 0.04]} m={m.tableLeg} />
           </group>
         )),
       )}
@@ -323,30 +392,250 @@ function Door() {
   )
 }
 
+// A picnic-style bench (the Strut helper, but in the ZY plane).
+function ZStrut({ from, to, x, thick, deep, m }) {
+  const dz = to[0] - from[0]
+  const dy = to[1] - from[1]
+  return (
+    <Box
+      p={[x, (from[1] + to[1]) / 2, (from[0] + to[0]) / 2]}
+      s={[deep, thick, Math.hypot(dz, dy)]}
+      r={[-Math.atan2(dy, dz), 0, 0]}
+      m={m}
+      cast
+    />
+  )
+}
+
+// Picnic tables: top and both benches carried by a pair of crossed A-frame
+// legs at each end, tied together by a crossbar at bench height.
+const eggMats = new Map()
+function eggMaterial(kind) {
+  if (!eggMats.has(kind)) {
+    const glow = { gold: ['#ffe9a0', 0.25], galaxy: ['#4a35b8', 0.55] }[kind]
+    const map = eggTexture(kind)
+    eggMats.set(
+      kind,
+      new MeshStandardMaterial({
+        map,
+        roughness: kind === 'nest' ? 0.85 : 0.35,
+        metalness: 0,
+        emissive: glow?.[0] ?? '#000000',
+        emissiveMap: glow ? map : null,
+        emissiveIntensity: glow?.[1] ?? 0,
+      }),
+    )
+  }
+  return eggMats.get(kind)
+}
+
+const tagMats = new Map()
+function tagMaterial(text, gems) {
+  const key = `${text}:${gems}`
+  if (!tagMats.has(key)) tagMats.set(key, new SpriteMaterial({ map: priceTagTexture(text, gems), transparent: true, toneMapped: false }))
+  return tagMats.get(key)
+}
+
+// Egg shop: a dark mat with a lit pedestal per tier, an egg on each, and a
+// price sprite that always faces the camera. Static for now.
+function Eggs() {
+  const m = materials()
+  const { radius, height } = EGG_PEDESTAL
+  return (
+    <group>
+      <Box
+        p={[(EGG_MAT.minX + EGG_MAT.maxX) / 2, 0.012, (EGG_MAT.minZ + EGG_MAT.maxZ) / 2]}
+        s={[EGG_MAT.maxX - EGG_MAT.minX, 0.024, EGG_MAT.maxZ - EGG_MAT.minZ]}
+        m={m.eggMat}
+      />
+      {EGGS.map((e) => {
+        const big = e.size > 1
+        const pr = radius * (big ? 1.35 : 1)
+        const er = 0.5 * e.size // egg half-width
+        const eh = er * 1.28 // egg half-height
+        const eggY = height + 0.04 + eh
+        const tagW = big ? 3.4 : 2.6
+        return (
+          <group key={e.z} position={[e.x, 0, e.z]}>
+            <mesh geometry={DISC} material={m.pedestalRim} position={[0, height * 0.3, 0]} scale={[pr, height * 0.6, pr]} castShadow receiveShadow />
+            <mesh geometry={DISC} material={m.pedestalBand} position={[0, height * 0.62, 0]} scale={[pr * 0.98, height * 0.1, pr * 0.98]} />
+            <mesh geometry={DISC} material={m.pedestalTop} position={[0, height * 0.85, 0]} scale={[pr * 0.92, height * 0.3, pr * 0.92]} receiveShadow />
+            <mesh geometry={SPHERE} material={eggMaterial(e.kind)} position={[0, eggY, 0]} scale={[er, eh, er]} castShadow />
+            {e.kind === 'nest' && <mesh geometry={CAP} material={m.nestCap} position={[0, eggY + eh * 0.55, 0]} scale={[er * 1.08, eh * 0.55, er * 1.08]} castShadow />}
+            <sprite material={tagMaterial(e.price, !!e.gems)} position={[0, eggY + eh + 0.75, 0]} scale={[tagW, tagW * (160 / 512), 1]} />
+          </group>
+        )
+      })}
+    </group>
+  )
+}
+
+const spriteMats = new Map()
+function spriteMaterial(key, texture) {
+  if (!spriteMats.has(key)) spriteMats.set(key, new SpriteMaterial({ map: texture, transparent: true, toneMapped: false }))
+  return spriteMats.get(key)
+}
+
+// The thing a BUY pad sells, hovering over it: a bread loaf for food, a
+// brown gas puff for farts. Bobs and turns slowly.
+function FloatingItem({ item, y }) {
+  const ref = useRef()
+  useFrame(({ clock }) => {
+    const g = ref.current
+    if (!g) return
+    const t = clock.elapsedTime
+    g.position.y = y + Math.sin(t * 1.6) * 0.1
+    g.rotation.y = t * 0.5
+  })
+  const m = materials()
+  return (
+    <group ref={ref} position={[0, y, 0]}>
+      {item === 'food' ? (
+        <group>
+          <mesh geometry={SPHERE} material={m.bread} scale={[1.5, 0.62, 0.8]} castShadow />
+          {[-0.7, 0, 0.7].map((x) => (
+            <mesh key={x} geometry={SPHERE} material={m.breadCut} position={[x, 0.5, 0]} scale={[0.32, 0.07, 0.1]} rotation={[0, 0, x * -0.4]} />
+          ))}
+        </group>
+      ) : (
+        <group>
+          {[
+            [0, 0, 0, 0.75],
+            [0.6, -0.1, 0.2, 0.55],
+            [-0.6, -0.05, -0.1, 0.6],
+            [0.15, 0.4, -0.2, 0.5],
+            [-0.2, 0.35, 0.3, 0.45],
+          ].map(([x, yy, z, r], i) => (
+            <mesh key={i} geometry={SPHERE} material={m.gas} position={[x, yy, z]} scale={r} />
+          ))}
+        </group>
+      )}
+    </group>
+  )
+}
+
+function DoorTag() {
+  const t = DOOR_TAG
+  return (
+    <sprite
+      material={spriteMaterial(`doorTag:${t.level}:${t.hp}:${t.max}`, doorTagTexture(t.level, t.hp, t.max))}
+      position={[0, t.y, DOOR.z + 1.4]}
+      scale={[3.2, 1, 1]}
+    />
+  )
+}
+
+// East-side shop corner: BUY pad with the next Fart's price, the FREE spin
+// pad, and the offline-cash signpost. Display only for now.
+function ShopCorner() {
+  const m = materials()
+  const spin = SPIN_PAD
+  const sign = OFFLINE_SIGN
+  return (
+    <group>
+      {/* BUY pads: low white platform, the item floating above, price on top */}
+      {BUY_PADS.map((pad) => (
+        <group key={pad.id} position={[pad.x, 0, pad.z]}>
+          <mesh geometry={DISC} material={m.padSnow} position={[0, 0.07, 0]} scale={[pad.radius, 0.14, pad.radius]} receiveShadow />
+          <mesh geometry={DISC} material={m.pedestalBand} position={[0, 0.03, 0]} scale={[pad.radius * 1.04, 0.06, pad.radius * 1.04]} />
+          <FloatingItem item={pad.item} y={2.3} />
+          <sprite material={spriteMaterial('buy', signTexture('BUY', { fill: '#8dff45', fill2: '#25b800', stroke: '#0b3d00', width: 512, height: 256 }))} position={[0, 0.95, 0]} scale={[2.6, 1.3, 1]} />
+          <sprite material={spriteMaterial(`pad:${pad.label}:${pad.price}`, padLabelTexture(pad.label, pad.price))} position={[0, 3.9, 0]} scale={[2.9, 1.45, 1]} />
+        </group>
+      ))}
+
+      {/* Spin pad: glowing green ring with the floating wheel above */}
+      <group position={[spin.x, 0, spin.z]}>
+        <mesh geometry={DISC} material={m.spinFill} position={[0, 0.02, 0]} scale={[spin.radius, 0.04, spin.radius]} />
+        <mesh material={m.spinRing} position={[0, 0.05, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+          <ringGeometry args={[spin.radius * 0.82, spin.radius, 48]} />
+        </mesh>
+        <sprite material={spriteMaterial(`spin:${spin.reward}`, spinTagTexture(spin.reward))} position={[0, 2.5, 0]} scale={[2.4, 3.6, 1]} />
+      </group>
+
+      {/* Offline-cash signpost */}
+      <group position={[sign.x, 0, sign.z]} rotation={[0, sign.facing, 0]}>
+        <Box p={[0, 0.9, -0.05]} s={[0.22, 1.8, 0.22]} m={m.doorWood} cast />
+        <Box p={[0, 1.7, 0]} s={[2.6, 1.3, 0.14]} r={[0, 0, -0.06]} m={m.doorWood} cast />
+        <mesh geometry={PLANE} material={m.offlineSign} position={[0, 1.7, 0.08]} scale={[2.45, 1.2, 1]} rotation={[0, 0, -0.06]} />
+      </group>
+    </group>
+  )
+}
+
+// White round cafe tables with a couple of stools each.
+function RoundTables() {
+  const m = materials()
+  const { radius, height } = ROUND_TABLE
+  return (
+    <group>
+      {ROUND_TABLES.map((t) => (
+        <group key={t.z} position={[t.x, 0, t.z]}>
+          <mesh geometry={DISC} material={m.roundTable} position={[0, 0.03, 0]} scale={[0.5, 0.06, 0.5]} castShadow />
+          <mesh geometry={PIPE} material={m.roundTable} position={[0, height / 2, 0]} scale={[0.07, height, 0.07]} />
+          <mesh geometry={DISC} material={m.roundTable} position={[0, height - 0.04, 0]} scale={[radius, 0.08, radius]} castShadow receiveShadow />
+          {[-1, 1].map((s) => (
+            <group key={s} position={[-1.35, 0, s * 0.9]}>
+              <mesh geometry={PIPE} material={m.roundTable} position={[0, 0.25, 0]} scale={[0.05, 0.5, 0.05]} />
+              <mesh geometry={DISC} material={m.roundTable} position={[0, 0.03, 0]} scale={[0.26, 0.05, 0.26]} />
+              <mesh geometry={DISC} material={m.roundTable} position={[0, 0.5, 0]} scale={[0.3, 0.06, 0.3]} castShadow />
+            </group>
+          ))}
+        </group>
+      ))}
+    </group>
+  )
+}
+
+// The portal (local +x is its front): a dark stone doorway on the west wall filled with a pink glow,
+// a light pool on the floor, a magenta title and its two requirement rows.
+function Portal() {
+  const m = materials()
+  const { x, z, facing, width: w, height: h, depth: d, post, requires } = PORTAL
+  return (
+    <group position={[x, 0, z]} rotation={[0, facing - Math.PI / 2, 0]}>
+      {[-1, 1].map((s) => (
+        <group key={s}>
+          <Box p={[0, (h + 0.6) / 2, s * (w / 2 + post / 2)]} s={[d, h + 0.6, post]} m={m.portalFrame} cast />
+          <Box p={[d * 0.1, h / 2, s * (w / 2 - 0.04)]} s={[0.1, h, 0.08]} m={m.portalTrim} />
+        </group>
+      ))}
+      <Box p={[0, h + 0.3, 0]} s={[d, 0.6, w + 2 * post]} m={m.portalFrame} cast />
+      <Box p={[d * 0.1, h - 0.04, 0]} s={[0.1, 0.08, w]} m={m.portalTrim} />
+      <mesh geometry={PLANE} material={m.portalGlow} position={[-d / 2 + 0.06, h / 2, 0]} scale={[w, h, 1]} rotation={[0, Math.PI / 2, 0]} />
+      <mesh geometry={PLANE} material={m.portalFloor} position={[1.7, 0.03, 0]} scale={[4.2, w + 2, 1]} rotation={[-Math.PI / 2, 0, Math.PI / 2]} />
+      <pointLight color="#ff4df0" intensity={14} distance={9} position={[1, 1.8, 0]} />
+      <sprite material={spriteMaterial('portalTitle', portalTitleTexture())} position={[0.2, h + 1.5, 0]} scale={[3.6, 1.125, 1]} />
+      <sprite material={spriteMaterial(`portalReq:${requires.rebirths}:${requires.power}`, portalReqTexture(requires.rebirths, requires.power))} position={[0.9, 1.5, 0]} scale={[1.6, 1.2, 1]} />
+    </group>
+  )
+}
+
 function Tables() {
   const m = materials()
   const { length: L, width: tw, height: th } = TABLE
+  const reach = BENCH.offset + BENCH.width / 2 // how far the feet splay out
   return (
     <group>
-      {TABLES.map(({ x, z }) => (
-        <group key={`${x}:${z}`} position={[x, 0, z]}>
-          <Box p={[0, th - 0.05, 0]} s={[L, 0.1, tw]} m={m.tableTop} cast />
-          {[-1, 1].map((sx) => (
-            <group key={sx}>
-              <Box p={[sx * (L / 2 - 0.8), (th - 0.1) / 2, 0]} s={[0.12, th - 0.1, tw - 0.4]} m={m.tableLeg} cast />
-              {[-1, 1].map((sz) => (
-                <Box
-                  key={sz}
-                  p={[sx * (L / 2 - 0.6), (BENCH.height - 0.08) / 2, sz * BENCH.offset]}
-                  s={[0.1, BENCH.height - 0.08, BENCH.width - 0.1]}
-                  m={m.tableLeg}
-                />
-              ))}
-            </group>
+      {TABLES.map(({ x, z, rot }) => (
+        <group key={`${x}:${z}`} position={[x, 0, z]} rotation={[0, rot, 0]}>
+          <Box p={[0, th - 0.05, 0]} s={[L, 0.1, tw]} m={m.picnicTop} cast />
+          {[-1.6, 1.6].map((ox) => (
+            <mesh key={ox} geometry={DISC} material={m.tableSpot} position={[ox, th + 0.006, 0]} scale={[0.38, 0.012, 0.27]} />
           ))}
           {[-1, 1].map((sz) => (
-            <Box key={sz} p={[0, BENCH.height - 0.04, sz * BENCH.offset]} s={[L, 0.08, BENCH.width]} m={m.tableTop} cast />
+            <Box key={sz} p={[0, BENCH.height - 0.04, sz * BENCH.offset]} s={[L, 0.08, BENCH.width]} m={m.picnicTop} cast />
           ))}
+          {[-1, 1].map((sx) => {
+            const lx = sx * (L / 2 - 0.9)
+            return (
+              <group key={sx}>
+                <ZStrut from={[-0.25, th - 0.1]} to={[reach, 0]} x={lx} thick={0.12} deep={0.14} m={m.picnicLeg} />
+                <ZStrut from={[0.25, th - 0.1]} to={[-reach, 0]} x={lx} thick={0.12} deep={0.14} m={m.picnicLeg} />
+                <Box p={[lx, BENCH.height - 0.14, 0]} s={[0.14, 0.1, 2 * reach]} m={m.picnicLeg} />
+              </group>
+            )
+          })}
         </group>
       ))}
     </group>
@@ -425,7 +714,7 @@ function Leaderboards() {
   return (
     <group>
       {LEADERBOARDS.map((l) => (
-        <group key={l.title} position={[l.x, 0, l.z]} rotation={[0, Math.PI, 0]}>
+        <group key={l.title} position={[l.x, 0, l.z]} rotation={[0, l.facing, 0]}>
           {[-1, 1].map((s) => (
             <group key={s}>
               <Box p={[s * (bw / 2 + p / 2), lh / 2, 0]} s={[p, lh, p]} m={m.stone} cast />
@@ -442,9 +731,9 @@ function Leaderboards() {
           />
           <mesh
             geometry={PLANE}
-            material={signMaterial(`title:${l.title}`, signTexture(l.title, { fill: '#e3ecff', fill2: '#9db4e6', stroke: '#1d2944' }))}
-            position={[0, lh + 1, 0]}
-            scale={[bw + 1.6, (bw + 1.6) * (160 / 1024), 1]}
+            material={signMaterial(`title:${l.title}`, signTexture(l.title, { fill: '#8fd0ff', fill2: '#2f7fe0', stroke: '#0d2350' }))}
+            position={[0, lh + 1.2, 0]}
+            scale={[bw + 3, (bw + 3) * (160 / 1024), 1]}
           />
         </group>
       ))}
@@ -455,14 +744,44 @@ function Leaderboards() {
 function TrainingArea() {
   const m = materials()
   const a = TRAINING_AREA
-  const s = TRAINING_SIGN
+  const cx = (a.minX + a.maxX) / 2
+  const cz = (a.minZ + a.maxZ) / 2
+  const w = a.maxX - a.minX
+  const d = a.maxZ - a.minZ
+  const pit = TRAINING_PIT
+  const curtainH = 1.3
+  const strip = 0.45 // light-blue raised strip bordering the zone
+  const stripH = 0.06
   const signMat = signMaterial('training', signTexture('TRAINING AREA'))
   return (
     <group>
-      <FloorDecal x={(a.minX + a.maxX) / 2} z={(a.minZ + a.maxZ) / 2} w={a.maxX - a.minX} d={a.maxZ - a.minZ} m={m.trainingFloor} />
+      <FloorDecal x={cx} z={cz} w={w} d={d} m={m.trainingFloor} />
+      <FloorDecal
+        x={(pit.minX + pit.maxX) / 2}
+        z={(pit.minZ + pit.maxZ) / 2}
+        w={pit.maxX - pit.minX}
+        d={pit.maxZ - pit.minZ}
+        m={m.trainingPit}
+        y={0.02}
+      />
+      {/* Light curtains rising from the pit edges */}
+      {[pit.minZ, pit.maxZ].map((z) => (
+        <mesh key={z} geometry={PLANE} material={m.glowCurtain} position={[(pit.minX + pit.maxX) / 2, curtainH / 2, z]} scale={[pit.maxX - pit.minX, curtainH, 1]} />
+      ))}
+      {[pit.minX, pit.maxX].map((x) => (
+        <mesh key={x} geometry={PLANE} material={m.glowCurtain} position={[x, curtainH / 2, (pit.minZ + pit.maxZ) / 2]} scale={[pit.maxZ - pit.minZ, curtainH, 1]} rotation={[0, Math.PI / 2, 0]} />
+      ))}
+      <Box p={[cx, stripH / 2, a.minZ - strip / 2]} s={[w + 2 * strip, stripH, strip]} m={m.curb} />
+      <Box p={[cx, stripH / 2, a.maxZ + strip / 2]} s={[w + 2 * strip, stripH, strip]} m={m.curb} />
+      <Box p={[a.minX - strip / 2, stripH / 2, cz]} s={[strip, stripH, d]} m={m.curb} />
+      <Box p={[a.maxX + strip / 2, stripH / 2, cz]} s={[strip, stripH, d]} m={m.curb} />
       {/* Readable from both sides: one face north toward the door, one south */}
-      <mesh geometry={PLANE} material={signMat} position={[s.x, s.y, s.z - 0.02]} scale={[s.width, s.height, 1]} rotation={[0, Math.PI, 0]} />
-      <mesh geometry={PLANE} material={signMat} position={[s.x, s.y, s.z + 0.02]} scale={[s.width, s.height, 1]} />
+      {TRAINING_SIGNS.map((sg) => (
+        <group key={sg.x}>
+          <mesh geometry={PLANE} material={signMat} position={[sg.x, sg.y, sg.z - 0.02]} scale={[sg.width, sg.height, 1]} rotation={[0, Math.PI, 0]} />
+          <mesh geometry={PLANE} material={signMat} position={[sg.x, sg.y, sg.z + 0.02]} scale={[sg.width, sg.height, 1]} />
+        </group>
+      ))}
     </group>
   )
 }
@@ -479,6 +798,11 @@ export default function Room() {
       <Tables />
       <Lockers />
       <Crates />
+      <Eggs />
+      <ShopCorner />
+      <DoorTag />
+      <Portal />
+      <RoundTables />
       <Sink />
       <Leaderboards />
     </group>

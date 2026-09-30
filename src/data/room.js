@@ -10,9 +10,19 @@ export const BENCH = { width: 0.5, height: 0.46, offset: 1.2 } // offset = bench
 
 // The training area: a darker floor zone with a glowing yellow rim, filled
 // with cafeteria tables. The hall's south half.
-export const TRAINING_AREA = { minX: -20, maxX: 20, minZ: 4, maxZ: 30 }
+export const TRAINING_AREA = { minX: -16, maxX: 16, minZ: 4, maxZ: 30 }
 
-export const TABLES = [-9, 9].flatMap((x) => [9, 15, 21, 26.5].map((z) => ({ x, z })))
+// The bright open pit in the middle of the zone, edged with yellow light.
+// Tables sit on the ring around it, so it stays clear of them.
+export const TRAINING_PIT = { minX: -10.5, maxX: 10.5, minZ: 8.5, maxZ: 24.5 }
+
+// Tables ring the pit: three across the south side (long axis along X) and
+// two down each side (`rot` = quarter turn, long axis along Z). The north
+// side is left open.
+export const TABLES = [
+  ...[-7.6, 0, 7.6].map((x) => ({ x, z: 27.2, rot: 0 })),
+  ...[-1, 1].flatMap((side) => [12.5, 20].map((z) => ({ x: side * 13.3, z, rot: Math.PI / 2 }))),
+]
 
 // Locker banks: `count` units side by side, their back against a wall.
 // `facing` is the yaw the fronts face (0 = +Z / south). Each bank fits in
@@ -37,22 +47,65 @@ export const CRATES = [
   { x: 24.6, z: 4.2, size: 1.3, level: 0, rot: 0.15 },
   { x: 24.6, z: 5.6, size: 1.3, level: 0, rot: 0 },
   { x: 24.6, z: 4.9, size: 1.3, level: 1, rot: -0.1 },
-  { x: -24.8, z: -2, size: 1.3, level: 0, rot: 0.2 },
-  { x: -23.4, z: -2.2, size: 1.3, level: 0, rot: 0 },
+  { x: -24.6, z: 28.9, size: 1.3, level: 0, rot: 0.2 },
+  { x: -23.2, z: 28.9, size: 1.3, level: 0, rot: 0 },
 ]
+
+// Egg shop along the west wall: a dark mat with one pedestal per egg tier,
+// cheapest at the door end. `size` scales the egg; `gems` prices it in the
+// premium currency instead of Cash. Prices are display-only for now.
+export const EGG_MAT = { minX: HALL.minX + 0.7, maxX: HALL.minX + 5.6, minZ: 6.5, maxZ: 27.5 }
+export const EGGS = [
+  { kind: 'plain', x: HALL.minX + 3.2, z: 9.5, price: '2.5K', size: 1 },
+  { kind: 'gold', x: HALL.minX + 3.2, z: 14.5, price: '15K', size: 1 },
+  { kind: 'nest', x: HALL.minX + 3.2, z: 19.5, price: '3M', size: 1 },
+  { kind: 'galaxy', x: HALL.minX + 3.4, z: 24.6, price: '115', size: 1.7, gems: true },
+]
+export const EGG_PEDESTAL = { radius: 0.95, height: 0.4 }
+
+// East-side shop corner between the door and the training area: the BUY
+// pad for the next Fart, the free daily spin pad, and the offline-cash sign.
+// Prices are display-only for now. `facing` is the yaw the fronts face.
+export const BUY_PADS = [
+  { id: 'food', item: 'food', x: -14, z: -4.4, radius: 2.1, label: 'NEXT FOOD:', price: '$3.5K' },
+  { id: 'fart', item: 'fart', x: 14, z: -4.4, radius: 2.1, label: 'NEXT FART:', price: '$10K' },
+]
+
+// Health tag floating in front of the door (display only for now).
+export const DOOR_TAG = { level: 1, hp: 20, max: 20, y: 3.3 }
+export const SPIN_PAD = { x: 19.8, z: -4.6, radius: 2, reward: 'x3' }
+export const OFFLINE_SIGN = { x: 23.2, z: -0.4, facing: -Math.PI / 2 }
+
+// Round white tables with stools, in front of the leaderboards.
+export const ROUND_TABLE = { radius: 0.95, height: 0.82 }
+export const ROUND_TABLES = [7, 13.25, 21.5].map((z) => ({ x: HALL.maxX - 4.2, z }))
+
+// Portal on the west wall, between the lockers and the egg shop. `facing`
+// is the yaw its front faces; `requires` is shown on its label (display only).
+export const PORTAL = {
+  x: HALL.minX + 0.55,
+  z: 0.5,
+  facing: Math.PI / 2,
+  width: 3,
+  height: 3.6,
+  depth: 0.9,
+  post: 0.55,
+  requires: { rebirths: 5, power: 5 },
+}
 
 // Hand-wash sink beside the east locker bank on the north wall.
 export const SINK = { x: 7, z: HALL.minZ + 0.45 }
 
-// Leaderboard stands against the south wall, facing north.
+// Leaderboard stands against the east wall beside the training area,
+// facing west into the hall (`facing` is the yaw their fronts face).
 export const LEADERBOARDS = [
-  { x: 7, z: HALL.maxZ - 1.6, title: 'REBIRTHS', header: 'REBIRTH LEADERBOARD' },
-  { x: -7, z: HALL.maxZ - 1.6, title: 'FART POWER', header: 'FART POWER LEADERBOARD' },
+  { x: HALL.maxX - 1.6, z: 9, facing: -Math.PI / 2, title: 'REBIRTHS', header: 'REBIRTH LEADERBOARD' },
+  { x: HALL.maxX - 1.6, z: 17.5, facing: -Math.PI / 2, title: 'FART POWER', header: 'FART POWER LEADERBOARD' },
 ]
 export const LEADERBOARD = { width: 5.2, pillar: 1, height: 5.2 }
 
-// Big floating sign over the training area's north edge.
-export const TRAINING_SIGN = { x: 0, y: 7.5, z: TRAINING_AREA.minZ, width: 14, height: 2.2 }
+// Floating "TRAINING AREA" signs over the zone's north edge, one per half.
+export const TRAINING_SIGNS = [-8, 8].map((x) => ({ x, y: 5.2, z: TRAINING_AREA.minZ, width: 9, height: 1.4 }))
 
 // Ceiling structure: girders span X at these Z stations; wall pilasters
 // line up under them.
@@ -77,9 +130,13 @@ function buildColliders() {
   out.push(span(CORRIDOR.halfWidth, HALL.maxX + 2, northMinZ, HALL.minZ, HALL.height))
 
   for (const t of TABLES) {
-    out.push(box(t.x, t.z, TABLE.length, TABLE.width, TABLE.height))
-    out.push(box(t.x, t.z - BENCH.offset, TABLE.length, BENCH.width, BENCH.height))
-    out.push(box(t.x, t.z + BENCH.offset, TABLE.length, BENCH.width, BENCH.height))
+    // A quarter-turned table swaps its X and Z extents.
+    const turned = t.rot !== 0
+    const add = (dx, dz, along, across, height) =>
+      out.push(box(t.x + (turned ? dz : dx), t.z + (turned ? dx : dz), turned ? across : along, turned ? along : across, height))
+    add(0, 0, TABLE.length, TABLE.width, TABLE.height)
+    add(0, -BENCH.offset, TABLE.length, BENCH.width, BENCH.height)
+    add(0, BENCH.offset, TABLE.length, BENCH.width, BENCH.height)
   }
   for (const b of LOCKER_BANKS) {
     const along = b.count * LOCKER.width
@@ -93,7 +150,21 @@ function buildColliders() {
     out.push(box(c.x, c.z, c.size, c.size, c.size * (stacked ? 2 : 1)))
   }
   out.push(box(SINK.x, SINK.z, 0.9, 0.7, 1))
-  for (const l of LEADERBOARDS) out.push(box(l.x, l.z, LEADERBOARD.width + LEADERBOARD.pillar * 2, 1, LEADERBOARD.height))
+  for (const t of ROUND_TABLES) out.push(box(t.x, t.z, 2 * ROUND_TABLE.radius, 2 * ROUND_TABLE.radius, ROUND_TABLE.height))
+  out.push(box(OFFLINE_SIGN.x, OFFLINE_SIGN.z, 0.5, 2.6, 2.2))
+  for (const side of [-1, 1]) {
+    // Only the two stone posts are solid; the opening between them is walkable.
+    out.push(box(PORTAL.x, PORTAL.z + side * (PORTAL.width / 2 + PORTAL.post / 2), PORTAL.depth, PORTAL.post, PORTAL.height + 0.6))
+  }
+  for (const e of EGGS) {
+    const r = EGG_PEDESTAL.radius * (e.size > 1 ? 1.35 : 1)
+    out.push(box(e.x, e.z, 2 * r, 2 * r, EGG_PEDESTAL.height))
+  }
+  for (const l of LEADERBOARDS) {
+    const along = LEADERBOARD.width + LEADERBOARD.pillar * 2
+    const alongX = Math.abs(Math.sin(l.facing)) < 0.5
+    out.push(box(l.x, l.z, alongX ? along : 1, alongX ? 1 : along, LEADERBOARD.height))
+  }
   return out
 }
 

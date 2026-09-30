@@ -9,7 +9,7 @@ const THICKNESS = 4
 export default function Ground() {
   const width = BOUNDS.maxX - BOUNDS.minX + MARGIN * 2
   const depth = BOUNDS.maxZ - BOUNDS.minZ + MARGIN * 2
-  const material = groundMaterial({ a: '#eef2f8', b: '#e7ecf4', grout: '#cbd5e4', repeat: Math.max(width, depth) / (TILE * 2) })
+  const material = groundMaterial({ a: '#eef3fb', b: '#ebf0f9', grout: '#dde5f1', repeat: Math.max(width, depth) / (TILE * 2) })
 
   return (
     <mesh
