@@ -39,6 +39,13 @@ export const REBIRTH_BANDS = [
 // Fart Power level: level N tops out at 50 * 2^(N-1) (1: 50, 2: 100, 3: 200, ...).
 export const levelMaxPower = (level) => 50 * 2 ** (level - 1)
 
+// Belly/waist size for a Fart Power total (systems/belly.js BELLY_SIZE): 0.7 at
+// the starting power, rising by doublings of power toward a ceiling of 2.4. It
+// eases off smoothly (no hard cap), so every power from 1 to billions maps to a
+// distinct, proportionate size: ~1.5 at 200, ~1.8 at 1,000, ~2.3 at 1,000,000.
+export const bellyForPower = (power) =>
+  0.7 + 1.7 * (1 - Math.exp(-Math.max(0, Math.log2(Math.max(power, 1) / 25)) / 5))
+
 // { level, progress } for a Fart Power total; progress is 0..1 within the level.
 export function fartLevelInfo(power) {
   let level = 1

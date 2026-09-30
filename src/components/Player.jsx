@@ -7,7 +7,7 @@ import { authState, getEquippedAvatar, getProportions, onAvatarChanged, onPropor
 import { DEV_MODE } from '../data/bloxity.js'
 import { applyProportions, attachEquippedAccessories } from '../systems/avatarLoader.js'
 import { buildDefaultCharacter, loadBaseCharacter } from '../systems/defaultCharacter.js'
-import { syncBellyColor, easeBellySize } from '../systems/belly.js'
+import { easeBellySize } from '../systems/belly.js'
 import { useGameStore } from '../store/useGameStore.js'
 import { makeGait, updateGait, disposeGait } from '../systems/avatarAnim.js'
 
@@ -41,7 +41,6 @@ function useBloxityAvatar() {
       await attachEquippedAccessories(group, equipped, { signal: controller.signal })
       if (cancelled || mine !== generation) return
       currentRef.current = group
-      syncBellyColor(group)
       applyProportions(group, getProportions())
       setAvatar(group)
       // Only count it once auth has settled, so the signed-in accessory

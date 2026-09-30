@@ -214,6 +214,7 @@ export function applyProportions(root, proportions) {
   if (n.LegL_Offset) n.LegL_Offset.position.x = RIG.legOffsetX * p.legOffsetX
   if (n.LegR_Offset) n.LegR_Offset.position.x = -RIG.legOffsetX * p.legOffsetX
   if (n.Spine1) n.Spine1.scale.x = p.torsoScaleX
+  root.torsoK = p.torsoScaleX // systems/belly.js re-applies it with the fat torso scale
   if (n.Neck_Offset) n.Neck_Offset.position.y = RIG.neckOffsetY * p.neckHeight
   if (n.Neck1) n.Neck1.scale.setScalar(p.headScale)
 
@@ -221,5 +222,7 @@ export function applyProportions(root, proportions) {
   // height proportion as a vertical stretch only — a taller character isn't
   // proportionally wider, just taller.
   const unitScale = player.dims.height / RIG_HEIGHT
+  root.shoulderK = p.shoulderWidth // systems/belly.js pushes the arms out from this
+  root.heightBase = unitScale * p.height // systems/belly.js grows it with bellySize
   root.scale.set(unitScale, unitScale * p.height, unitScale)
 }

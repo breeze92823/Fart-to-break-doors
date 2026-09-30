@@ -1,152 +1,146 @@
-// The character's big belly and waist: two flattened low-poly spheres (upper
-// belly over the ribs, a wider lower belly/waist ring over the hips) parented
-// to the Spine1 bone so they lean and bob with the walk cycle. Works on both
-// the bundled player.glb rig and the procedural fallback, since both expose
-// Spine1 in `root.nodes`. Sizes are rig units (RIG_HEIGHT-tall space): Spine1
-// is the hip pivot, the shoulder pivot is 2.4 above it, arms hang at x = ±2.
-//
-// The belly is coloured from the character's own torso: syncBellyColor()
-// averages the torso's patch of the skin texture, so it follows whatever skin
-// the player has equipped instead of a fixed colour.
-import { Color, Mesh, MeshStandardMaterial, SphereGeometry } from 'three'
+// The fat body. Two things grow with the size multiplier:
+//   - the torso itself, widened and (mostly) deepened into a barrel by scaling
+//     the Spine1 bone, so it keeps the player's own shirt;
+//   - a waist ring, a flattened low-poly sphere around the hips that the torso
+//     sits in.
+// Spine2 gets the inverse scale, so the arms, head and back item above it keep
+// their own size, and the shoulders are pushed out to the torso's new sides.
+// Works on both the bundled player.glb rig and the procedural fallback, since
+// both hang the torso off Spine1. Sizes are rig units (RIG_HEIGHT-tall space):
+// Spine1 is the hip pivot, the shoulder pivot is 2.4 above it.
+import { Mesh, MeshStandardMaterial, SphereGeometry, Vector3 } from 'three'
+import { RIG } from '../data/bloxity.js'
 import { MATERIAL_PBR } from '../data/materials.js'
 
-// Used until a skin colour can be sampled (procedural character, no texture).
-const FALLBACK_COLOR = '#cfe4ff'
+const WAIST_COLOR = '#8f93a8'
+const TORSO_HALF_W = 1.4 // the rig torso's half width, where the arms start
 
-// [name, [rx, ry, rz], [x, y, z]] in Spine1 space. Z is forward (+Z, matching
-// the arm pivots sitting 0.4 in front of the spine). Centres sit close to the
-// spine and radii are large in Z, so the belly wraps the back as well as the
-// front instead of leaving the torso showing behind it.
-const BELLY_PARTS = [
-  ['BellyUpper', [1.75, 1.35, 1.7], [0, 1.3, 0.4]],
-  ['BellyLower', [2.05, 1.1, 2.0], [0, 0.1, 0.45]],
-]
-
-// Belly/waist size multiplier (store `bellySize`, synced to other players).
-// 1 = the sizes above. Width and depth scale fully, height at half rate so a
-// fat character grows outward more than tall.
+// Size multiplier (store `bellySize`, synced to other players): 0.7 = the
+// starting body, 2.4 = the fattest (data/hud.js bellyForPower).
 export const BELLY_SIZE = { def: 1, min: 0.5, max: 3 }
 
-let geo = null
+// Jiggle: a damped spring (per character) driven by the spine's world
+// acceleration, so the waist wobbles when walking, landing and stopping.
+const SPRING_K = 140
+const SPRING_C = 7
+const JIGGLE_GAIN = 0.06 // rig units of offset per m/s^2
+const JIGGLE_MAX = 0.6
 
-// Ease the belly toward `target`, at most a step per call, and re-scale only
-// when it moved. Returns nothing; the current value lives on root.bellyK so
-// each character (local or remote) eases independently.
-export function easeBellySize(root, target, dt) {
-  const upper = root?.nodes?.BellyUpper
-  if (!upper) return
-  const goal = Math.min(BELLY_SIZE.max, Math.max(BELLY_SIZE.min, Number.isFinite(target) ? target : 1))
-  const cur = root.bellyK ?? 1
-  if (Math.abs(goal - cur) < 0.001 && root.bellyK !== undefined) return
-  const k = Math.abs(goal - cur) < 0.002 ? goal : cur + (goal - cur) * (1 - Math.exp(-8 * dt))
-  root.bellyK = k
-  const h = 1 + (k - 1) * 0.5
-  for (const [name, [rx, ry, rz], [x, y, z]] of BELLY_PARTS) {
-    const m = root.nodes[name]
-    if (!m) continue
-    m.scale.set(rx * k, ry * h, rz * k)
-    m.position.set(x, y * h, z * k)
+let geo = null
+const _p = new Vector3()
+const _d = new Vector3()
+
+function stepJiggle(root, dt) {
+  const spine = root.nodes.Spine1
+  const j = (root.jiggle ||= { y: 0, vy: 0, z: 0, vz: 0, prev: new Vector3(), vel: new Vector3(), ready: false })
+  spine.getWorldPosition(_p)
+  if (!j.ready) {
+    j.prev.copy(_p)
+    j.ready = true
+    return j
+  }
+  if (dt <= 0) return j
+  const vel = _d.copy(_p).sub(j.prev).divideScalar(dt)
+  j.prev.copy(_p)
+  // Ignore teleports (respawn, snapping to a seat).
+  if (vel.lengthSq() > 900) {
+    j.vel.set(0, 0, 0)
+    return j
+  }
+  const ax = (vel.x - j.vel.x) / dt
+  const ay = (vel.y - j.vel.y) / dt
+  const az = (vel.z - j.vel.z) / dt
+  j.vel.copy(vel)
+  const fwd = root.getWorldDirection(_d)
+  const accelFwd = ax * fwd.x + az * fwd.z
+  // Inertia: the belly lags behind the body's acceleration.
+  const fy = Math.max(-60, Math.min(60, -ay)) * JIGGLE_GAIN
+  const fz = Math.max(-60, Math.min(60, -accelFwd)) * JIGGLE_GAIN
+  const n = Math.max(1, Math.ceil(dt / 0.008))
+  const h = Math.min(dt, 0.1) / n
+  for (let i = 0; i < n; i += 1) {
+    j.vy += (-SPRING_K * j.y - SPRING_C * j.vy) * h + fy * SPRING_K * h
+    j.y += j.vy * h
+    j.vz += (-SPRING_K * j.z - SPRING_C * j.vz) * h + fz * SPRING_K * h
+    j.z += j.vz * h
+  }
+  j.y = Math.max(-JIGGLE_MAX, Math.min(JIGGLE_MAX, j.y))
+  j.z = Math.max(-JIGGLE_MAX, Math.min(JIGGLE_MAX, j.z))
+  return j
+}
+
+// Fatness 0..1 for a size multiplier: 0 at the starting size, 1 at the fattest.
+const T_FROM = 0.7
+const T_SPAN = 1.7
+const lerp = (a, b, t) => a + (b - a) * t
+
+// Every dimension for a fatness t. The ring is always wider and deeper than
+// the torso's bottom corners, so the torso never pokes through it.
+function fit(t) {
+  return {
+    torsoX: lerp(1, 1.65, t), // torso width scale
+    torsoZ: lerp(1, 2.9, t), // torso depth scale: thin slab -> round barrel
+    rx: lerp(1.9, 3.5, t), // ring radii
+    ry: lerp(0.75, 1.65, t),
+    rz: lerp(1.35, 3.5, t),
+    cy: lerp(0.1, -0.15, t), // ring centre above the hip pivot
   }
 }
 
-// Idempotent: a root that already has the belly is left alone. Each character
-// gets its own material so one player's skin colour never leaks to another.
+// Ease the body toward `target` (at most a step per call), then apply the
+// jiggle. The current size lives on root.bellyK so each character (local or
+// remote) eases independently.
+export function easeBellySize(root, target, dt) {
+  const n = root?.nodes
+  const m = n?.Waist
+  if (!m) return
+  const goal = Math.min(BELLY_SIZE.max, Math.max(BELLY_SIZE.min, Number.isFinite(target) ? target : 1))
+  const cur = root.bellyK ?? goal
+  const k = Math.abs(goal - cur) < 0.002 ? goal : cur + (goal - cur) * (1 - Math.exp(-8 * dt))
+  root.bellyK = k
+  const t = Math.min(1, Math.max(0, (k - T_FROM) / T_SPAN))
+  const { torsoX, torsoZ, rx, ry, rz, cy } = fit(t)
+
+  // Taller as well as fatter: up to +20%. heightBase is the rig's own scale
+  // from applyProportions.
+  if (root.heightBase) root.scale.y = root.heightBase * (1 + t * 0.2)
+
+  // torsoK is the SDK's own torso width (applyProportions); it still applies
+  // to everything above, as before. Only the fat part is undone on Spine2.
+  n.Spine1.scale.set((root.torsoK ?? 1) * torsoX, 1, torsoZ)
+  if (n.Spine2) n.Spine2.scale.set(1 / torsoX, 1, 1 / torsoZ)
+  const armX = RIG.armOffsetX * (root.shoulderK ?? 1) + TORSO_HALF_W * (torsoX - 1)
+  if (n.ArmL_Offset) n.ArmL_Offset.position.x = armX
+  if (n.ArmR_Offset) n.ArmR_Offset.position.x = -armX
+
+  // The ring is a child of Spine1, so the torso's fat scale is divided out.
+  const j = stepJiggle(root, dt)
+  const amp = 0.4 + 0.6 * t // a fatter waist wobbles more
+  const dy = j.y * amp
+  const dz = j.z * amp
+  m.scale.set((rx * (1 - dy * 0.06)) / torsoX, ry * (1 + dy * 0.12), (rz * (1 + dz * 0.05)) / torsoZ)
+  m.position.set(0, cy + dy, dz / torsoZ)
+}
+
+// Idempotent: a root that already has the waist ring is left alone.
 export function attachBelly(root) {
   const spine = root?.nodes?.Spine1
-  if (!spine || root.nodes.BellyUpper) return root
-  geo ||= new SphereGeometry(1, 14, 10)
-  const mat = new MeshStandardMaterial({ ...MATERIAL_PBR.PLAYER, color: FALLBACK_COLOR, flatShading: true })
-  for (const [name, [rx, ry, rz], [x, y, z]] of BELLY_PARTS) {
-    const m = new Mesh(geo, mat)
-    m.name = name
-    m.scale.set(rx, ry, rz)
-    m.position.set(x, y, z)
-    m.castShadow = true
-    m.receiveShadow = true
-    spine.add(m)
-    root.nodes[name] = m
-  }
+  if (!spine || root.nodes.Waist) return root
+  geo ||= new SphereGeometry(1, 14, 8)
+  const m = new Mesh(geo, material())
+  m.name = 'Waist'
+  m.castShadow = true
+  m.receiveShadow = true
+  spine.add(m)
+  root.nodes.Waist = m
+  const { rx, ry, rz, cy } = fit(0)
+  m.scale.set(rx, ry, rz)
+  m.position.set(0, cy, 0)
   return root
 }
 
-// Average colour of the texture region the torso's UVs cover, or null when
-// there is no readable texture (procedural rig, tainted or not-yet-loaded image).
-function sampleTorsoColor(torso) {
-  const map = torso?.material?.map
-  const image = map?.image
-  const uv = torso?.geometry?.getAttribute('uv')
-  if (!image || !uv) return null
-  const w = image.width
-  const h = image.height
-  if (!w || !h) return null
-
-  let u0 = 1
-  let v0 = 1
-  let u1 = 0
-  let v1 = 0
-  for (let i = 0; i < uv.count; i += 1) {
-    const u = uv.getX(i)
-    const v = uv.getY(i)
-    if (u < u0) u0 = u
-    if (u > u1) u1 = u
-    if (v < v0) v0 = v
-    if (v > v1) v1 = v
-  }
-  // glTF UVs have v down from the top of the image, same as canvas y.
-  const x = Math.max(0, Math.floor(u0 * w))
-  const y = Math.max(0, Math.floor(v0 * h))
-  const sw = Math.max(1, Math.min(w - x, Math.ceil((u1 - u0) * w)))
-  const sh = Math.max(1, Math.min(h - y, Math.ceil((v1 - v0) * h)))
-
-  try {
-    const canvas = document.createElement('canvas')
-    canvas.width = sw
-    canvas.height = sh
-    const ctx = canvas.getContext('2d', { willReadFrequently: true })
-    ctx.drawImage(image, x, y, sw, sh, 0, 0, sw, sh)
-    const data = ctx.getImageData(0, 0, sw, sh).data
-    let r = 0
-    let g = 0
-    let b = 0
-    let n = 0
-    for (let i = 0; i < data.length; i += 4) {
-      if (data[i + 3] < 128) continue
-      r += data[i]
-      g += data[i + 1]
-      b += data[i + 2]
-      n += 1
-    }
-    if (!n) return null
-    // Pixels are sRGB; Color.setRGB with the sRGB space converts to the
-    // renderer's linear working space.
-    return new Color().setRGB(r / n / 255, g / n / 255, b / n / 255, 'srgb')
-  } catch {
-    return null // cross-origin skin without CORS headers
-  }
-}
-
-// Call after the skin/parts are applied. Leaves the fallback colour when the
-// torso colour can't be read.
-export function syncBellyColor(root) {
-  const belly = root?.nodes?.BellyUpper
-  if (!belly) return
-  const color = sampleTorsoColor(root.nodes.default_torso)
-  if (!color) return
-  liftDark(color)
-  belly.material.color.copy(color)
-  // A faint self-glow in the same hue keeps the shading readable in the dim hall.
-  belly.material.emissive.copy(color).multiplyScalar(EMISSIVE_BOOST)
-  belly.material.roughness = 0.45 // some sheen so the curve catches the light
-}
-
-// Near-black skins swallow all the lighting and the belly turns into a flat
-// silhouette. Raise the lightness to a floor, keeping hue and saturation, so
-// a black character gets a dark charcoal belly whose shape still reads.
-const MIN_LIGHTNESS = 0.2
-const EMISSIVE_BOOST = 0.18
-const _hsl = {}
-function liftDark(color) {
-  color.getHSL(_hsl)
-  if (_hsl.l < MIN_LIGHTNESS) color.setHSL(_hsl.h, _hsl.s, MIN_LIGHTNESS)
+// One shared material: every waist ring is the same flat-shaded grey.
+let mat = null
+function material() {
+  return (mat ||= new MeshStandardMaterial({ ...MATERIAL_PBR.PLAYER, color: WAIST_COLOR, flatShading: true }))
 }

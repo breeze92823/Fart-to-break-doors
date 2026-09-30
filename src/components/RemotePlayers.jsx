@@ -4,7 +4,7 @@ import { Quaternion, Vector3 } from 'three'
 import { subscribeRoster } from '../systems/net.js'
 import { applyProportions, attachEquippedAccessories } from '../systems/avatarLoader.js'
 import { loadBaseCharacter } from '../systems/defaultCharacter.js'
-import { syncBellyColor, easeBellySize } from '../systems/belly.js'
+import { easeBellySize } from '../systems/belly.js'
 import { makeGait, updateGait, disposeGait } from '../systems/avatarAnim.js'
 import { FART, fartSources, makeFartState, stepFartState } from '../systems/fart.js'
 import { makeEatingLoop, volumeAt } from '../systems/eatingSound.js'
@@ -87,7 +87,6 @@ function RemotePlayer({ p }) {
       const group = await loadBaseCharacter()
       await attachEquippedAccessories(group, parsed.equipped || null, { signal: controller.signal })
       if (cancelled) return
-      syncBellyColor(group)
       applyProportions(group, parsed.proportions || null)
       setAvatar(group)
     }
