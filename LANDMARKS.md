@@ -74,10 +74,10 @@ Name is what to call it. Source is the constant that places it (`room.js` unless
 | Name | Where | What it is | Source |
 | --- | --- | --- | --- |
 | `EGG-SHOP` | x −25.3 … −20.4, z 6.5 … 27.5 | Dark mat holding the four egg pedestals | `EGG_MAT` |
-| `EGG-PLAIN` | (−22.8, 9.5) | White egg, 2.5K Cash | `EGGS[0]` |
-| `EGG-GOLD` | (−22.8, 14.5) | Gold egg, 15K Cash | `EGGS[1]` |
-| `EGG-NEST` | (−22.8, 19.5) | Nest egg, 3M Cash | `EGGS[2]` |
-| `EGG-GALAXY` | (−22.6, 24.6), 1.7× size | Big galaxy egg, 115 premium currency | `EGGS[3]` |
+| `EGG-PLAIN` | (−22.8, 9.5) | White egg, needs Rebirth 4 | `EGGS[0]` |
+| `EGG-GOLD` | (−22.8, 14.5) | Gold egg, needs Rebirth 5 | `EGGS[1]` |
+| `EGG-NEST` | (−22.8, 19.5) | Nest egg, needs Rebirth 6 | `EGGS[2]` |
+| `EGG-GALAXY` | (−22.6, 24.6), 1.7× size | Big galaxy egg, needs Rebirth 10 | `EGGS[3]` |
 
 ### Training end (south)
 

@@ -15,9 +15,12 @@ export default function TutorialBanner() {
   const boughtFart = useGameStore((s) => s.ownedFarts.length > 1)
   const boughtFood = useGameStore((s) => s.ownedFoods.length > 1)
   const firstDoorBroken = useGameStore((s) => s.doorHp[0] <= 0)
+  const progressKnown = useGameStore((s) => s.progressKnown)
+  const resumedDone = useGameStore((s) => s.tutorialResumedDone)
   const [phase, setPhase] = useState('show') // 'show' | 'leaving' | 'gone'
 
   useEffect(() => {
+    if (!progressKnown) return // the saved step may still be on its way
     if (step === 0 && firstDoorBroken) useGameStore.setState({ tutorialStep: 1 })
     else if (step === 1 && cash >= TUTORIAL_CASH) useGameStore.setState({ tutorialStep: 2 })
     else if (step === 2 && !inDoorArea) useGameStore.setState({ tutorialStep: 3 })
@@ -27,7 +30,7 @@ export default function TutorialBanner() {
     else if (step === 6 && cash >= TUTORIAL_CASH_2) useGameStore.setState({ tutorialStep: 7 })
     else if (step === 7 && !inDoorArea) useGameStore.setState({ tutorialStep: 8 })
     else if (step === 8 && boughtFart) useGameStore.setState({ tutorialStep: TUTORIAL_DONE_STEP })
-  }, [step, fartPower, cash, firstDoorBroken, inDoorArea, boughtFood, boughtFart])
+  }, [progressKnown, step, fartPower, cash, firstDoorBroken, inDoorArea, boughtFood, boughtFart])
 
   const done = step >= TUTORIAL_DONE_STEP
   useEffect(() => {
@@ -40,7 +43,9 @@ export default function TutorialBanner() {
     }
   }, [done])
 
-  if (phase === 'gone') return null
+  // Hidden until we know whether this is a new player, and for good once a
+  // returning player's save shows the tutorial was already finished.
+  if (!progressKnown || resumedDone || phase === 'gone') return null
   return (
     <>
       <div className={`tutorial${phase === 'leaving' ? ' tutorial--leaving' : ''}`}>

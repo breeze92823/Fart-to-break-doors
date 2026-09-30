@@ -79,7 +79,7 @@ import {
   portalTitleTexture,
   portalFloorGlowTexture,
   portalGlowTexture,
-  priceTagTexture,
+  rebirthTagTexture,
   signTexture,
   spinTagTexture,
   trainingFloorTexture,
@@ -551,9 +551,9 @@ function eggMaterial(kind) {
 }
 
 const tagMats = new Map()
-function tagMaterial(text, gems) {
-  const key = `${text}:${gems}`
-  if (!tagMats.has(key)) tagMats.set(key, new SpriteMaterial({ map: priceTagTexture(text, gems), transparent: true, toneMapped: false }))
+function tagMaterial(rebirths) {
+  const key = String(rebirths)
+  if (!tagMats.has(key)) tagMats.set(key, new SpriteMaterial({ map: rebirthTagTexture(rebirths), transparent: true, toneMapped: false }))
   return tagMats.get(key)
 }
 
@@ -583,7 +583,7 @@ function Eggs() {
             <mesh geometry={DISC} material={m.pedestalTop} position={[0, height * 0.85, 0]} scale={[pr * 0.92, height * 0.3, pr * 0.92]} receiveShadow />
             <mesh geometry={SPHERE} material={eggMaterial(e.kind)} position={[0, eggY, 0]} scale={[er, eh, er]} castShadow />
             {e.kind === 'nest' && <mesh geometry={CAP} material={m.nestCap} position={[0, eggY + eh * 0.55, 0]} scale={[er * 1.08, eh * 0.55, er * 1.08]} castShadow />}
-            <sprite material={tagMaterial(e.price, !!e.gems)} position={[0, eggY + eh + 0.75, 0]} scale={[tagW, tagW * (160 / 512), 1]} />
+            <sprite material={tagMaterial(e.rebirths)} position={[0, eggY + eh + 0.75, 0]} scale={[tagW, tagW * (160 / 512), 1]} />
           </group>
         )
       })}
@@ -994,6 +994,7 @@ function Crown() {
   const ref = useRef()
   useFrame(({ clock }) => {
     if (!ref.current) return
+    ref.current.visible = !useGameStore.getState().crownTaken
     ref.current.rotation.y = clock.elapsedTime * 0.8
     ref.current.position.y = CROWN.y + Math.sin(clock.elapsedTime * 1.6) * 0.12
   })

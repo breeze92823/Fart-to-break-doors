@@ -4,6 +4,7 @@ import { step as stepInteract } from '../systems/interact.js'
 import { step as stepFart } from '../systems/fart.js'
 import { step as stepDoors } from '../systems/doors.js'
 import { step as stepFoods } from '../systems/foods.js'
+import { step as stepCrown } from '../systems/crown.js'
 import { step as stepFarts } from '../systems/farts.js'
 import { step as stepCashPopups } from '../systems/cashPopups.js'
 import { reportLocal } from '../systems/net.js'
@@ -27,6 +28,7 @@ export default function GameLoop() {
     stepFart(dt)
     stepDoors(dt)
     stepFoods(dt)
+    stepCrown()
     stepFarts()
     stepCashPopups(dt, camera)
     reportLocal(dt)

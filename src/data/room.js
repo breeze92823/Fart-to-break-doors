@@ -73,14 +73,14 @@ export const WIN_PILLARS = [
 
 
 // Egg shop along the west wall: a dark mat with one pedestal per egg tier,
-// cheapest at the door end. `size` scales the egg; `gems` prices it in the
-// premium currency instead of Cash. Prices are display-only for now.
+// cheapest at the door end. `size` scales the egg; `rebirths` is the rebirth
+// count required. Display-only for now.
 export const EGG_MAT = { minX: HALL.minX + 0.7, maxX: HALL.minX + 5.6, minZ: 6.5, maxZ: 27.5 }
 export const EGGS = [
-  { kind: 'plain', x: HALL.minX + 3.2, z: 9.5, price: '2.5K', size: 1 },
-  { kind: 'gold', x: HALL.minX + 3.2, z: 14.5, price: '15K', size: 1 },
-  { kind: 'nest', x: HALL.minX + 3.2, z: 19.5, price: '3M', size: 1 },
-  { kind: 'galaxy', x: HALL.minX + 3.4, z: 24.6, price: '115', size: 1.7, gems: true },
+  { kind: 'plain', x: HALL.minX + 3.2, z: 9.5, rebirths: 4, size: 1 },
+  { kind: 'gold', x: HALL.minX + 3.2, z: 14.5, rebirths: 5, size: 1 },
+  { kind: 'nest', x: HALL.minX + 3.2, z: 19.5, rebirths: 6, size: 1 },
+  { kind: 'galaxy', x: HALL.minX + 3.4, z: 24.6, rebirths: 10, size: 1.7 },
 ]
 export const EGG_PEDESTAL = { radius: 0.95, height: 0.4 }
 

@@ -479,6 +479,11 @@
 .menu-btn .emoji {
   font-size: calc(56 * var(--u));
 }
+.menu-btn__img {
+  width: calc(66 * var(--u));
+  height: calc(66 * var(--u));
+  object-fit: contain;
+}
 .menu-btn:nth-child(2) {
   background: radial-gradient(circle at 50% 30%, #ff9bf0, #d62bd6 70%);
 }
@@ -650,14 +655,14 @@
   left: 50%;
   bottom: calc(60 * var(--u));
   transform: translateX(-50%);
-  width: calc(300 * var(--u));
-  height: calc(110 * var(--u));
-  border-radius: calc(26 * var(--u));
-  border: calc(7 * var(--u)) solid var(--outline);
+  width: calc(225 * var(--u));
+  height: calc(82.5 * var(--u));
+  border-radius: calc(19.5 * var(--u));
+  border: calc(5.25 * var(--u)) solid var(--outline);
   background: linear-gradient(180deg, #ff2a2a 0%, #d3103a 55%, #c40f8a 100%);
-  box-shadow: inset 0 calc(6 * var(--u)) 0 rgba(255, 255, 255, 0.35);
-  font-size: calc(64 * var(--u));
-  letter-spacing: calc(2 * var(--u));
+  box-shadow: inset 0 calc(4.5 * var(--u)) 0 rgba(255, 255, 255, 0.35);
+  font-size: calc(48 * var(--u));
+  letter-spacing: calc(1.5 * var(--u));
   pointer-events: auto;
   cursor: pointer;
   transition: transform 0.1s;
@@ -997,3 +1002,26 @@
 .rebirth-win__btn--skip { background: linear-gradient(#fff27a, #ffc400); }
 .rebirth-win__btn--go { background: linear-gradient(#7dff8a, #12c63a); }
 .rebirth-win__btn--locked { filter: grayscale(0.85) brightness(0.8); cursor: not-allowed; }
+
+/* ---------- Level Up banner (top centre, under the Fart Power bar) ---------- */
+.levelup {
+  position: absolute;
+  top: calc(116 * var(--u));
+  left: 50%;
+  transform: translateX(-50%);
+  text-align: center;
+  z-index: 5;
+  will-change: transform, opacity;
+}
+.levelup__title {
+  font-size: calc(68 * var(--u));
+  line-height: 1;
+  letter-spacing: 1px;
+  color: #ffd21e;
+}
+.levelup__sub {
+  margin-top: calc(6 * var(--u));
+  font-size: calc(32 * var(--u));
+  line-height: 1;
+  color: #fff;
+}

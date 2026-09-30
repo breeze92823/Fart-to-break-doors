@@ -7,8 +7,11 @@ import FoodModel from './FoodModels.jsx'
 
 // The equipped Training Food, resting on the table in front of the seated
 // player while they train.
-const SCALE = 0.221 // food models fit a ~2 m box; this makes them ~0.45 m
-const FROM_SEAT = BENCH.offset - TABLE.width * 0.3 // seat point -> food, toward the table centre
+export const SCALE = 0.221 // food models fit a ~2 m box; this makes them ~0.45 m
+export const FROM_SEAT = BENCH.offset - TABLE.width * 0.3 // seat point -> food, toward the table centre
+
+// Also used for remote players (components/RemotePlayers.jsx).
+export const FOOD_HEIGHT = TABLE.height + SCALE * 1.1
 
 export default function SeatedFood() {
   const ref = useRef()
@@ -19,7 +22,7 @@ export default function SeatedFood() {
     const seat = player.seated ? player.seat : null
     g.visible = !!seat
     if (!seat) return
-    g.position.set(seat.x - seat.outX * FROM_SEAT, TABLE.height + SCALE * 1.1, seat.z - seat.outZ * FROM_SEAT)
+    g.position.set(seat.x - seat.outX * FROM_SEAT, FOOD_HEIGHT, seat.z - seat.outZ * FROM_SEAT)
     g.rotation.y = clock.elapsedTime * 0.5
   })
   if (!foodId) return null

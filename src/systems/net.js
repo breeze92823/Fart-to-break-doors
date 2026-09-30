@@ -6,8 +6,9 @@
 //
 // Relays: position/yaw/gait/pose (`move`), each fart (`fart`), the avatar
 // (`setAvatar`) and live stats; exposes the remote roster that
-// components/RemotePlayers.jsx renders. Durable save/load is not wired yet
-// (nothing earns progress — see PROGRESSION.md).
+// components/RemotePlayers.jsx renders. Durable save/load covers only the
+// tutorial step so far (`saveProgress` / the server's `progress`), which is
+// what keeps the tutorial to new players.
 import {
   authState,
   subscribeAuth,
@@ -28,6 +29,8 @@ import {
   JOIN_TIMEOUT_MS,
   RETRY_BACKOFF_MS,
   STATS_RESEND_DEBOUNCE_MS,
+  PROGRESS_RESEND_DEBOUNCE_MS,
+  PROGRESS_KNOWN_TIMEOUT_MS,
   MOVE_SEND_INTERVAL_MS,
   USERNAME_WAIT_MS,
 } from '../data/net.js'
@@ -138,15 +141,38 @@ function send(type, payload) {
 // --- Stats ------------------------------------------------------------------
 function sendStatsNow() {
   const s = useGameStore.getState()
-  send('stats', { fartPower: s.fartPower, rebirths: s.rebirths, bellySize: s.bellySize })
+  send('stats', { fartPower: s.fartPower, rebirths: s.rebirths, bellySize: s.bellySize, equippedFood: s.equippedFood })
+}
+
+// The ROOM decides whether this session may persist (its userIds map), so a
+// save sent just after a logout lands as a harmless no-op there.
+function sendProgressNow() {
+  send('saveProgress', { tutorialStep: useGameStore.getState().tutorialStep })
 }
 
 let statsTimer = 0
+let progressTimer = 0
 let lastSnap = ''
+let lastStep = useGameStore.getState().tutorialStep
+
+// Applied at most once per IDENTITY: the first `progress` under the current
+// sign-in is the real load. A later reattach under the SAME identity would
+// otherwise clobber what the player did locally during a blip.
+let hydratedFromServer = false
 
 // useGameStore.subscribe fires on ANY change, so filter to the fields we send.
 function onStoreChange(s) {
-  const snap = `${s.fartPower}|${s.rebirths}|${s.bellySize}`
+  if (s.tutorialStep !== lastStep) {
+    lastStep = s.tutorialStep
+    // Only once the saved step has loaded, or the initial 0 could overwrite it.
+    if (getStableUserId() && s.progressKnown && !progressTimer) {
+      progressTimer = setTimeout(() => {
+        progressTimer = 0
+        sendProgressNow()
+      }, PROGRESS_RESEND_DEBOUNCE_MS)
+    }
+  }
+  const snap = `${s.fartPower}|${s.rebirths}|${s.bellySize}|${s.equippedFood}`
   if (snap === lastSnap) return
   lastSnap = snap
   if (statsTimer) return
@@ -239,6 +265,11 @@ function sendIdentityNow() {
   const userId = getStableUserId()
   const username = getDisplayName()
   if (userId === lastIdentity.userId && username === lastIdentity.username) return
+  // Flush this session's progress under the OLD id before the room forgets it.
+  if (lastIdentity.userId && lastIdentity.userId !== userId) sendProgressNow()
+  // A freshly-signed-in id gets its saved doc hydrated, like a brand-new join.
+  if (userId && userId !== lastIdentity.userId) hydratedFromServer = false
+
   lastIdentity = { userId, username }
   send('identify', { userId, username })
   // Signing in/out flips avatarPayload()'s equipped gate.
@@ -342,9 +373,14 @@ function attachRoom(joined) {
   room.onError((code, message) => {
     netState.error = message || `error ${code}`
   })
-  // Server pushes we don't consume yet; registering silences the SDK warning.
-  room.onMessage('progress', () => {})
-  room.onMessage('noProgress', () => {})
+  // The saved doc for our Bloxity user id, sent once right after join.
+  room.onMessage('progress', (msg) => {
+    if (hydratedFromServer) return
+    hydratedFromServer = true
+    useGameStore.getState().hydrate(msg)
+  })
+  // A brand-new account has no save: nothing to hydrate, start the tutorial now.
+  room.onMessage('noProgress', () => useGameStore.getState().setProgressKnown())
   room.onMessage('leaderboard', (data) => {
     lastLeaderboard = data || {}
     emitLeaderboard()
@@ -409,9 +445,16 @@ export function init() {
   if (started) return
   started = true
   stopped = false
-  // No server configured for this build: stay 'idle' forever. Every export
-  // below already no-ops without a room.
-  if (!SERVER_URL) return
+  // Ceiling on the new-vs-returning signal: covers a signed-in player whose
+  // join or save lookup is slow, bounded so a new player's tutorial never
+  // stalls on a cold host boot.
+  setTimeout(() => useGameStore.getState().setProgressKnown(), PROGRESS_KNOWN_TIMEOUT_MS)
+  // No server configured for this build: stay 'idle' forever, and there is no
+  // save to wait for. Every export below already no-ops without a room.
+  if (!SERVER_URL) {
+    useGameStore.getState().setProgressKnown()
+    return
+  }
 
   offStore ||= useGameStore.subscribe(onStoreChange)
   // subscribeAuth also fires on friends/balance loads; sendIdentityNow()'s own
@@ -422,6 +465,9 @@ export function init() {
   offAvatarChanged ||= onAvatarChanged(() => sendAvatarNow())
   offProportionsChanged ||= onProportionsChanged(() => sendAvatarNow())
   waitForAuth(USERNAME_WAIT_MS).then(() => {
+    // A confirmed guest never has a save to load (the server only loads one
+    // for a signed-in userId): no need to ride out the full timeout.
+    if (!getStableUserId()) useGameStore.getState().setProgressKnown()
     if (!stopped) connect()
   })
 }
@@ -431,10 +477,14 @@ export function teardown() {
   started = false
   clearTimeout(retryTimer)
   clearTimeout(statsTimer)
-  retryTimer = statsTimer = 0
+  clearTimeout(progressTimer)
+  retryTimer = statsTimer = progressTimer = 0
   for (const off of [offStore, offIdentity, offAvatarChanged, offProportionsChanged]) off?.()
   offStore = offIdentity = offAvatarChanged = offProportionsChanged = null
   clearRemotePlayers()
+  // Final best-effort save (room.send is fire-and-forget), but never before the
+  // saved step has loaded, or a fresh 0 would overwrite it.
+  if (getStableUserId() && useGameStore.getState().progressKnown) sendProgressNow()
   if (room) {
     try {
       // Don't let the SDK reconnect a socket we are deliberately closing.

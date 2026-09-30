@@ -68,7 +68,6 @@ export default function RebirthWindow() {
           </div>
         </div>
       </div>
-      <div className="food-shop__hint">Each Rebirth: +1x Cash from doors and Fart Power from training</div>
     </div>
   )
 }

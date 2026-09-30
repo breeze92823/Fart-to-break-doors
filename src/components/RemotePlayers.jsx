@@ -10,6 +10,8 @@ import { FART, fartSources, makeFartState, stepFartState } from '../systems/fart
 import { makeEatingLoop, volumeAt } from '../systems/eatingSound.js'
 import { playFartAt } from '../systems/fartSound.js'
 import Nametag from './Nametag.jsx'
+import FoodModel from './FoodModels.jsx'
+import { SCALE as FOOD_SCALE, FROM_SEAT, FOOD_HEIGHT } from './SeatedFood.jsx'
 
 const _up = new Vector3(0, 1, 0)
 const _targetQuat = new Quaternion()
@@ -40,6 +42,8 @@ function parseAvatar(raw) {
 function RemotePlayer({ p }) {
   const ref = useRef()
   const gaitRef = useRef(null)
+  const foodRef = useRef()
+  const [foodId, setFoodId] = useState(p.equippedFood)
   const posRef = useRef(null)
   const [avatar, setAvatar] = useState(null)
   const [avatarRaw, setAvatarRaw] = useState(p.avatar)
@@ -111,6 +115,7 @@ function RemotePlayer({ p }) {
     const delta = Math.min(rawDelta, 0.1)
     // A human-speed change (new equip) only needs a per-frame compare.
     if (p.avatar !== avatarRaw) setAvatarRaw(p.avatar)
+    if (p.equippedFood !== foodId) setFoodId(p.equippedFood)
 
     const g = ref.current
     if (!g) return
@@ -140,6 +145,16 @@ function RemotePlayer({ p }) {
     g.quaternion.slerp(_targetQuat, 1 - Math.pow(fastTurn ? FART_TURN_RATE : LERP_RATE, delta))
 
     easeBellySize(avatar, p.bellySize, delta)
+    // Their food turns on the table while they train. They face the table, so
+    // it sits FROM_SEAT ahead of the seat point (mirrors SeatedFood.jsx).
+    const food = foodRef.current
+    if (food) {
+      food.visible = p.seated
+      if (p.seated) {
+        food.position.set(p.x + Math.sin(p.yaw) * FROM_SEAT, FOOD_HEIGHT, p.z + Math.cos(p.yaw) * FROM_SEAT)
+        food.rotation.y = _state.clock.elapsedTime * 0.5
+      }
+    }
     eatingRef.current.set(p.seated, volumeAt(src.pos.x, src.pos.z))
 
     const gait = gaitRef.current
@@ -147,10 +162,17 @@ function RemotePlayer({ p }) {
   })
 
   return (
-    <group ref={ref}>
-      {avatar && <primitive object={avatar} />}
-      <Nametag getName={() => p.username} />
-    </group>
+    <>
+      <group ref={ref}>
+        {avatar && <primitive object={avatar} />}
+        <Nametag getName={() => p.username} />
+      </group>
+      {foodId && (
+        <group ref={foodRef} visible={false} scale={FOOD_SCALE}>
+          <FoodModel id={foodId} />
+        </group>
+      )}
+    </>
   )
 }
 

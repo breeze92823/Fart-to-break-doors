@@ -35,7 +35,8 @@ export default function GuideArrows() {
     const mesh = trail.current
     const top = beacon.current
     if (!mesh || !top) return
-    const target = TUTORIAL_TARGETS[useGameStore.getState().tutorialStep] ?? null
+    const { tutorialStep: step, progressKnown } = useGameStore.getState()
+    const target = progressKnown ? TUTORIAL_TARGETS[step] ?? null : null
     if (!target) {
       mesh.count = 0
       top.visible = false

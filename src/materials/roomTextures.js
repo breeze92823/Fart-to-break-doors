@@ -800,6 +800,27 @@ export function priceTagTexture(text, gems = false) {
   })
 }
 
+// Floating requirement label: "REBIRTH REQUIRED" over the rebirth count, both
+// outlined, on a transparent canvas for a sprite.
+export function rebirthTagTexture(n) {
+  return make(`rebirthTag:${n}`, 512, 160, (ctx, w, h) => {
+    ctx.clearRect(0, 0, w, h)
+    ctx.lineJoin = 'round'
+    ctx.textAlign = 'center'
+    ctx.textBaseline = 'middle'
+    const line = (text, size, y, fill) => {
+      ctx.font = `900 ${size}px "Arial Black", "Segoe UI Black", Impact, sans-serif`
+      ctx.lineWidth = size * 0.17
+      ctx.strokeStyle = '#111'
+      ctx.strokeText(text, w / 2, y)
+      ctx.fillStyle = fill
+      ctx.fillText(text, w / 2, y)
+    }
+    line('REBIRTH REQUIRED', 34, 52, '#ffffff')
+    line(String(n), 50, 100, '#ffd23f')
+  })
+}
+
 // Wooden signpost plank: "You earn Cash offline!" on brown boards with a
 // little Cash stack at each end.
 export function offlineSignTexture() {

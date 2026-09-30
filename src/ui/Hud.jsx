@@ -1,17 +1,19 @@
 import { useEffect, useRef, useState } from 'react'
 import { useGameStore } from '../store/useGameStore.js'
 import { login, showMenu, subscribeAuth } from '../systems/bloxity.js'
+import { installButtonSounds } from '../systems/uiSound.js'
 import { player, resetPlayer } from '../systems/playerState.js'
 import { standUp } from '../systems/seat.js'
 import { CORRIDOR, SPAWN, SPAWN_FACING } from '../data/world.js'
 import { formatClock, formatShort } from '../utils/format.js'
-import { CUSTOM_SIZE_MAX, MENU_BUTTONS, fartLevelInfo, OFFERS, REBIRTH_BANDS, STARTER_PACK_SECONDS } from '../data/hud.js'
+import { CUSTOM_SIZE_MAX, MENU_BUTTONS, fartLevelInfo, OFFERS, REBIRTH_BANDS, SHOW_ADDON, STARTER_PACK_SECONDS } from '../data/hud.js'
 import { ArrowIcon, CashIcon, GemIcon } from './icons.jsx'
 import InteractPrompt from './InteractPrompt.jsx'
 import CashPopups from './CashPopups.jsx'
 import FoodShop from './FoodShop.jsx'
 import FartShop from './FartShop.jsx'
 import RebirthWindow from './RebirthWindow.jsx'
+import LevelUpPopup from './LevelUpPopup.jsx'
 import TutorialBanner from './TutorialBanner.jsx'
 import './hud.css'
 
@@ -116,6 +118,8 @@ function RightColumn() {
 
   return (
     <>
+      {SHOW_ADDON && (
+        <>
       <RoundButton className="spin" label="Spin the Wheel">
         <span className="spin__wheel" />
         <Badge>!</Badge>
@@ -140,6 +144,8 @@ function RightColumn() {
           {OFFERS.opPet.price}
         </span>
       </button>
+        </>
+      )}
 
       <div className="auto-break">
         <span className="auto-break__label stroke">Auto Break</span>
@@ -153,6 +159,7 @@ function RightColumn() {
         </button>
       </div>
 
+      {SHOW_ADDON && (
       <div className="custom-size">
         <span className="custom-size__title stroke">Custom Size</span>
         <div className="custom-size__panel">
@@ -171,13 +178,17 @@ function RightColumn() {
           />
         </div>
       </div>
+      )}
     </>
   )
 }
 
+// Menu button id -> the store flag of the window it toggles.
+const MENU_WINDOWS = { boosts: 'fartShopOpen', foods: 'foodShopOpen', rebirth: 'rebirthOpen' }
+
 function LeftColumn() {
   const cash = useGameStore((s) => s.cash)
-  const rebirths = useGameStore((s) => s.rebirths)
+  const crowns = useGameStore((s) => s.crowns)
   return (
     <>
       <div className="stat stat--cash">
@@ -186,12 +197,14 @@ function LeftColumn() {
         </span>
         <span className="stat__value stroke">{formatShort(cash)}</span>
       </div>
-      <button type="button" className="plus" aria-label="Get more Cash" title="Get more Cash">
-        +
-      </button>
+      {SHOW_ADDON && (
+        <button type="button" className="plus" aria-label="Get more Cash" title="Get more Cash">
+          +
+        </button>
+      )}
       <div className="stat stat--rebirth">
         <span className="stat__icon emoji">👑</span>
-        <span className="stat__value stroke">{formatShort(rebirths)}</span>
+        <span className="stat__value stroke">{formatShort(crowns)}</span>
       </div>
       <div className="menu-grid">
         {MENU_BUTTONS.map((b) => (
@@ -201,9 +214,13 @@ function LeftColumn() {
             className="menu-btn"
             aria-label={b.label}
             title={b.label}
-            onClick={b.id === 'rebirth' ? () => useGameStore.setState((s) => ({ rebirthOpen: !s.rebirthOpen })) : undefined}
+            onClick={MENU_WINDOWS[b.id] ? () => useGameStore.setState((s) => ({ [MENU_WINDOWS[b.id]]: !s[MENU_WINDOWS[b.id]] })) : undefined}
           >
-            <span className="emoji">{b.icon}</span>
+            {b.img ? (
+              <img className="menu-btn__img" src={`${import.meta.env.BASE_URL}ui/${b.img}`} alt="" draggable={false} />
+            ) : (
+              <span className="emoji">{b.icon}</span>
+            )}
           </button>
         ))}
       </div>
@@ -297,6 +314,7 @@ function StopButton() {
 }
 
 export default function Hud() {
+  useEffect(installButtonSounds, [])
   return (
     <div className="hud">
       <LoginButton />
@@ -304,7 +322,8 @@ export default function Hud() {
       <StopButton />
       <FartPowerBar />
       <TutorialBanner />
-      <TopRow />
+      <LevelUpPopup />
+      {SHOW_ADDON && <TopRow />}
       <RightColumn />
       <LeftColumn />
       <RebirthBar />
@@ -314,16 +333,20 @@ export default function Hud() {
       <FartShop />
       <RebirthWindow />
 
-      <button type="button" className="corner corner--settings" aria-label="Settings" title="Settings" onClick={showMenu}>
-        <span className="emoji">⚙️</span>
-      </button>
-      <div className="corner corner--friends" title="Friend boost">
-        <span className="emoji">👥</span>
-        <span className="corner__caption stroke">+0%</span>
-      </div>
-      <button type="button" className="corner corner--quests" aria-label="Quests" title="Quests">
-        <span className="emoji">📋</span>
-      </button>
+      {SHOW_ADDON && (
+        <>
+          <button type="button" className="corner corner--settings" aria-label="Settings" title="Settings" onClick={showMenu}>
+            <span className="emoji">⚙️</span>
+          </button>
+          <div className="corner corner--friends" title="Friend boost">
+            <span className="emoji">👥</span>
+            <span className="corner__caption stroke">+0%</span>
+          </div>
+          <button type="button" className="corner corner--quests" aria-label="Quests" title="Quests">
+            <span className="emoji">📋</span>
+          </button>
+        </>
+      )}
     </div>
   )
 }

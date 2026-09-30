@@ -1,5 +1,6 @@
 import { isKeyDown } from './input.js'
-import { step as stepHold } from './interactHold.js'
+import { interactHoldState, step as stepHold } from './interactHold.js'
+import { playConfirm, setHoldProgress } from './uiSound.js'
 
 // Registry of hold-E zones. The first registered zone that is near and has a
 // label wins, so only one prompt shows at a time. See INTERACTION.md.
@@ -28,5 +29,10 @@ export function step(dt) {
     }
   }
   interactState.label = active ? label : null
-  if (stepHold(dt * 1000, active ? active.id : null, isKeyDown('KeyE'))) active.onConfirm()
+  if (stepHold(dt * 1000, active ? active.id : null, isKeyDown('KeyE'))) {
+    playConfirm()
+    active.onConfirm()
+  } else {
+    setHoldProgress(interactHoldState.progress)
+  }
 }

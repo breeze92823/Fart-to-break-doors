@@ -32,6 +32,7 @@ let wasInCorridor = false
 
 function resetDoors() {
   const { doorHp } = useGameStore.getState()
+  if (useGameStore.getState().crownTaken) useGameStore.setState({ crownTaken: false })
   if (doorHp.every((hp, i) => hp === DOOR_TAGS[i].hp)) return
   useGameStore.setState({ doorHp: DOOR_TAGS.map((t) => t.hp) })
   doorAnim.forEach((a) => {

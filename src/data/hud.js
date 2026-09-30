@@ -14,15 +14,18 @@ export const STARTER_PACK_SECONDS = 24 * 60 * 60
 // Custom Size input range.
 export const CUSTOM_SIZE_MAX = 6
 
-// Left-hand menu grid, in reading order (two columns).
+// Pets, Shop and Rewards only show when VITE_SHOW_ADDON=true (.env.example).
+export const SHOW_ADDON = import.meta.env.VITE_SHOW_ADDON === 'true'
+
+// Left-hand menu grid, in reading order (two columns). `img` is a file in public/ui; without it the emoji shows.
 export const MENU_BUTTONS = [
-  { id: 'pets', icon: '🐾', label: 'Pets' },
-  { id: 'shop', icon: '🧺', label: 'Shop' },
-  { id: 'boosts', icon: '🍀', label: 'Boosts' },
+  { id: 'pets', icon: '🐾', label: 'Pets', addon: true },
+  { id: 'shop', icon: '🧺', label: 'Shop', img: 'shop.png', addon: true },
+  { id: 'boosts', icon: '🍀', label: 'Fart', img: 'fart.png' },
   { id: 'foods', icon: '🍔', label: 'Training Foods' },
-  { id: 'rebirth', icon: '🔁', label: 'Rebirth' },
-  { id: 'rewards', icon: '⭐', label: 'Rewards' },
-]
+  { id: 'rebirth', icon: '🔁', label: 'Rebirth', img: 'rebirth.png' },
+  { id: 'rewards', icon: '⭐', label: 'Rewards', img: 'xp_cup.png', addon: true },
+].filter((b) => SHOW_ADDON || !b.addon)
 
 // Rebirth progress bar colour bands, as [colour, end fraction].
 export const REBIRTH_BANDS = [
