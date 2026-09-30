@@ -10,7 +10,8 @@ export const useGameStore = create(() => ({
 
   cash: Number(import.meta.env.VITE_START_CASH) || 0, // .env.example
   fartPower: Number(import.meta.env.VITE_START_FART_POWER) || 20, // .env.example
-  rebirths: 0,
+  rebirths: 0, // Cash and training multiplier is rebirths + 1 (data/rebirth.js)
+  rebirthOpen: false, // the Rebirth window (left menu button)
 
   // HUD display values whose rules are still TBD in PROGRESSION.md.
   // (The Fart Power level and bar fill are derived from fartPower: data/hud.js.)
@@ -32,6 +33,6 @@ export const useGameStore = create(() => ({
   autoBreak: false,
   nearDoor: false, // within fart reach of the first intact door (tutorial "Click to Fart")
   inDoorArea: false, // player is past the hazard stripe (shows the Back button)
-  bellySize: 1, // belly/waist multiplier (systems/belly.js BELLY_SIZE), synced to other players
+  bellySize: 2, // belly/waist multiplier (systems/belly.js BELLY_SIZE), synced to other players
   customSize: null, // null = default size, else 1..CUSTOM_SIZE_MAX
 }))

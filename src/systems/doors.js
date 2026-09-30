@@ -6,6 +6,7 @@ import { CORRIDOR, DOOR, DOORS, WIN_ROOM } from '../data/world.js'
 import { DOOR_TAGS } from '../data/room.js'
 import { spawnCashPopup } from './cashPopups.js'
 import { equippedFartStats } from './farts.js'
+import { currentMult } from './rebirth.js'
 import { playDoorBreak, preloadDoorSound } from './doorSound.js'
 
 // Door health and break animation. Each fart that lands while the player is
@@ -57,6 +58,7 @@ function hitDoor() {
   if (dz < 0 || dz > DOOR_REACH || Math.abs(player.position.x) > CORRIDOR.halfWidth) return
   const { fartPower, doorHp } = useGameStore.getState()
   const fart = equippedFartStats()
+  const mult = currentMult() // Rebirth multiplier on Cash
   // Power left over after a door breaks carries on to the next door, and so on.
   const hp = [...doorHp]
   let cash = 0
@@ -71,12 +73,12 @@ function hitDoor() {
     doorAnim[j].flash = 1
     doorHits.push({ door: j, damage })
     if (hp[j] === 0) {
-      cash += Math.round(DOOR_TAGS[j].cash * fart.cash)
+      cash += Math.round(DOOR_TAGS[j].cash * fart.cash * mult)
       broken.push(j)
     }
   }
   useGameStore.setState((s) => ({ doorHp: hp, cash: s.cash + cash }))
-  broken.forEach((j) => spawnCashPopup(Math.round(DOOR_TAGS[j].cash * fart.cash)))
+  broken.forEach((j) => spawnCashPopup(Math.round(DOOR_TAGS[j].cash * fart.cash * mult)))
   if (broken.length) playDoorBreak()
 }
 

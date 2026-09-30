@@ -1,6 +1,7 @@
 import { player } from './playerState.js'
 import { useGameStore } from '../store/useGameStore.js'
 import { equippedFartStats } from './farts.js'
+import { currentMult } from './rebirth.js'
 import { spawnCashPopup } from './cashPopups.js'
 import { makeEatingLoop } from './eatingSound.js'
 import { BUY_PADS } from '../data/room.js'
@@ -55,7 +56,7 @@ export function step(dt) {
   if (trainTimer < TRAIN_INTERVAL) return
   trainTimer -= TRAIN_INTERVAL
   const food = FOOD_BY_ID[useGameStore.getState().equippedFood]
-  const gain = food?.gain ?? 0
+  const gain = (food?.gain ?? 0) * currentMult()
   if (gain > 0) {
     useGameStore.setState((s) => ({ fartPower: s.fartPower + gain }))
     spawnCashPopup(gain, equippedFartStats().icon)

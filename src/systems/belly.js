@@ -24,9 +24,9 @@ const BELLY_PARTS = [
 ]
 
 // Belly/waist size multiplier (store `bellySize`, synced to other players).
-// 1 = the sizes above. Width and depth scale fully, height at half rate so a
+// 1 = the sizes above; the default is 2 (double). Width and depth scale fully, height at half rate so a
 // fat character grows outward more than tall.
-export const BELLY_SIZE = { def: 1, min: 0.5, max: 3 }
+export const BELLY_SIZE = { def: 2, min: 0.5, max: 3 }
 
 let geo = null
 
@@ -36,7 +36,7 @@ let geo = null
 export function easeBellySize(root, target, dt) {
   const upper = root?.nodes?.BellyUpper
   if (!upper) return
-  const goal = Math.min(BELLY_SIZE.max, Math.max(BELLY_SIZE.min, Number.isFinite(target) ? target : 1))
+  const goal = Math.min(BELLY_SIZE.max, Math.max(BELLY_SIZE.min, Number.isFinite(target) ? target : BELLY_SIZE.def))
   const cur = root.bellyK ?? 1
   if (Math.abs(goal - cur) < 0.001 && root.bellyK !== undefined) return
   const k = Math.abs(goal - cur) < 0.002 ? goal : cur + (goal - cur) * (1 - Math.exp(-8 * dt))

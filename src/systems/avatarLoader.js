@@ -191,6 +191,9 @@ export async function attachEquippedAccessories(root, equipped, { signal } = {})
   }
 }
 
+// Metres the head is raised above its normal spot on the neck.
+export const HEAD_LIFT = 1
+
 function prop(proportions, key) {
   const spec = PROPORTIONS[key]
   const raw = Number(proportions?.[key])
@@ -214,12 +217,15 @@ export function applyProportions(root, proportions) {
   if (n.LegL_Offset) n.LegL_Offset.position.x = RIG.legOffsetX * p.legOffsetX
   if (n.LegR_Offset) n.LegR_Offset.position.x = -RIG.legOffsetX * p.legOffsetX
   if (n.Spine1) n.Spine1.scale.x = p.torsoScaleX
-  if (n.Neck_Offset) n.Neck_Offset.position.y = RIG.neckOffsetY * p.neckHeight
-  if (n.Neck1) n.Neck1.scale.setScalar(p.headScale)
-
   // Rig units -> metres uniformly (must not distort), then the portal's
   // height proportion as a vertical stretch only — a taller character isn't
   // proportionally wider, just taller.
   const unitScale = player.dims.height / RIG_HEIGHT
-  root.scale.set(unitScale, unitScale * p.height, unitScale)
+  const yScale = unitScale * p.height
+
+  // The head rides HEAD_LIFT metres above the neck; convert to rig units.
+  if (n.Neck_Offset) n.Neck_Offset.position.y = RIG.neckOffsetY * p.neckHeight + HEAD_LIFT / yScale
+  if (n.Neck1) n.Neck1.scale.setScalar(p.headScale)
+
+  root.scale.set(unitScale, yScale, unitScale)
 }

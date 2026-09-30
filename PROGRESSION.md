@@ -24,7 +24,7 @@ The six values that make up a player's progress in Fart to Break Doors. **None o
 ## Rebirth
 - Integer count, starts at 0.
 - Resetting gives a permanent multiplier, so later runs progress faster.
-- What resets, what is kept, and the requirement to Rebirth are *TBD*.
+- Implemented (`data/rebirth.js`, `systems/rebirth.js`, `ui/RebirthWindow.jsx`, opened from the left menu): count 0 = Lv.1 / 1x; multiplier = count + 1, applied to door Cash and training Fart Power gain. Cost is Fart Power 5K, 10K, 20K, ... (5K * 2^count). A Rebirth resets Fart Power only; Cash, foods and farts are kept. The SKIP button is a placeholder.
 
 ## Training Foods
 - Each food has a price in Cash and a Fart Power gain.

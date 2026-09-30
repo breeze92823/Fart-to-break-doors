@@ -11,6 +11,7 @@ import InteractPrompt from './InteractPrompt.jsx'
 import CashPopups from './CashPopups.jsx'
 import FoodShop from './FoodShop.jsx'
 import FartShop from './FartShop.jsx'
+import RebirthWindow from './RebirthWindow.jsx'
 import TutorialBanner from './TutorialBanner.jsx'
 import './hud.css'
 
@@ -194,7 +195,14 @@ function LeftColumn() {
       </div>
       <div className="menu-grid">
         {MENU_BUTTONS.map((b) => (
-          <button key={b.id} type="button" className="menu-btn" aria-label={b.label} title={b.label}>
+          <button
+            key={b.id}
+            type="button"
+            className="menu-btn"
+            aria-label={b.label}
+            title={b.label}
+            onClick={b.id === 'rebirth' ? () => useGameStore.setState((s) => ({ rebirthOpen: !s.rebirthOpen })) : undefined}
+          >
             <span className="emoji">{b.icon}</span>
           </button>
         ))}
@@ -304,6 +312,7 @@ export default function Hud() {
       <CashPopups />
       <FoodShop />
       <FartShop />
+      <RebirthWindow />
 
       <button type="button" className="corner corner--settings" aria-label="Settings" title="Settings" onClick={showMenu}>
         <span className="emoji">⚙️</span>

@@ -2,10 +2,11 @@ import { useEffect, useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
 import { CanvasTexture, SRGBColorSpace } from 'three'
 import { player } from '../systems/playerState.js'
+import { HEAD_LIFT } from '../systems/avatarLoader.js'
 
 // Floating name above a remote player: a camera-facing sprite painted from a
-// small canvas, anchored at its bottom centre just above the head.
-const NAMETAG_Y = player.dims.height + 0.25
+// small canvas, anchored at its bottom centre just above the (raised) head.
+const NAMETAG_Y = player.dims.height + HEAD_LIFT + 0.25
 const WORLD_HEIGHT = 0.4 // m tall in the world
 const REPAINT_INTERVAL_MS = 1000
 
