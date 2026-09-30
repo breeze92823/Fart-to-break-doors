@@ -1,4 +1,4 @@
-import { Suspense, useEffect } from 'react'
+import { Suspense, useCallback, useEffect, useState } from 'react'
 import { Canvas } from '@react-three/fiber'
 import { PCFSoftShadowMap, SRGBColorSpace } from 'three'
 import { notifyFirstFrame } from './systems/bloxity.js'
@@ -14,6 +14,7 @@ import RemotePlayers from './components/RemotePlayers.jsx'
 import FartGas from './components/FartGas.jsx'
 import DoorHitFx from './components/DoorHitFx.jsx'
 import GuideArrows from './components/GuideArrows.jsx'
+import LoadingScreen from './components/LoadingScreen.jsx'
 
 // Indoors: the hall is fully enclosed, so the clear colour only shows
 // through gaps; match it to the walls.
@@ -22,10 +23,11 @@ const BACKGROUND = '#aabde2'
 // Rendered as the last child inside the Suspense boundary below, so it only
 // mounts once every suspending resource in the scene has resolved — the
 // right moment to tell the SDK loading is done and gameplay has started.
-function LoadingGate() {
+function LoadingGate({ onReady }) {
   useEffect(() => {
     notifyFirstFrame()
-  }, [])
+    onReady()
+  }, [onReady])
   return null
 }
 
@@ -38,9 +40,12 @@ const GRAPHICS_PRESETS = {
 
 export default function App() {
   useSettings()
+  const [sceneReady, setSceneReady] = useState(false)
+  const onSceneReady = useCallback(() => setSceneReady(true), [])
   const preset = GRAPHICS_PRESETS[settings.graphics_quality] ?? GRAPHICS_PRESETS.High
 
   return (
+    <>
     <Canvas
       shadows={preset.shadows && { type: PCFSoftShadowMap }}
       dpr={preset.dpr}
@@ -54,7 +59,7 @@ export default function App() {
       <Suspense fallback={null}>
         <Ground />
         <Room />
-        <LoadingGate />
+        <LoadingGate onReady={onSceneReady} />
       </Suspense>
       <Player />
       <SeatedFood />
@@ -63,5 +68,7 @@ export default function App() {
       <DoorHitFx />
       <GuideArrows />
     </Canvas>
+    <LoadingScreen sceneReady={sceneReady} />
+    </>
   )
 }
