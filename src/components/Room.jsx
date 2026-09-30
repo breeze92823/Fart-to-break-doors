@@ -587,7 +587,7 @@ function RoundTables() {
   )
 }
 
-// The portal (local +x is its front): a dark stone doorway on the west wall filled with a pink glow,
+// The portal (local +x is its front): a dark stone doorway on the south wall filled with a pink glow,
 // a light pool on the floor, a magenta title and its two requirement rows.
 function Portal() {
   const m = materials()

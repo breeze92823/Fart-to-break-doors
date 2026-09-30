@@ -25,12 +25,12 @@ The player spawns at `SPAWN` (0, −3), facing north at the door. "Left" and "ri
  x −26 ┌── HALL ───── z −9.5 ───────┴──────────────────────┐ x +26
        │ W-LOCKERS  N-LOCKERS-W   ·  SINK  ·  N-LOCKERS-E   │ E-LOCKERS
        │      FOOD-PAD (−14,−4.4)      FART-PAD (14,−4.4)   │ OFFLINE-SIGN
-       │ PORTAL (z 0.5)                          SPIN-PAD   │
+       │                                         SPIN-PAD   │
   W    │ ┌ EGG-SHOP ┐   ┌──────── TRAINING-AREA ────────┐    │  E
        │ │ eggs z   │   │  ring: tables (W)  PIT  (E)   │ LEADERBOARDS
        │ │ 9.5–24.6 │   │        tables (S)             │ ROUND-TABLES
        │ └──────────┘   └───────────────────────────────┘    │
-       │ CRATES-SW                                CRATES-SE  │
+       │ CRATES-SW               PORTAL (x 0)       CRATES-SE│
        └──────────────────── z +34 ─────────────────────────┘
                       S  (+Z)
 ```
@@ -70,7 +70,6 @@ Name is what to call it. Source is the constant that places it (`room.js` unless
 
 | Name | Where | What it is | Source |
 | --- | --- | --- | --- |
-| `PORTAL` | (−25.45, 0.5), opening z −1 … 2, faces east | Dark stone doorway with pink glow, "PORTAL" title, crown 5 / ball 5 requirement rows | `PORTAL` |
 | `EGG-SHOP` | x −25.3 … −20.4, z 6.5 … 27.5 | Dark mat holding the four egg pedestals | `EGG_MAT` |
 | `EGG-PLAIN` | (−22.8, 9.5) | White egg, 2.5K Cash | `EGGS[0]` |
 | `EGG-GOLD` | (−22.8, 14.5) | Gold egg, 15K Cash | `EGGS[1]` |
@@ -99,6 +98,12 @@ Name is what to call it. Source is the constant that places it (`room.js` unless
 | `CRATES-SE` | x 24.5 … 24.6, z 30.7 … 32.4; one stacked | `CRATES[4..6]` |
 | `CRATES-E` | x 24.6, z 4.2 … 5.6; one stacked | `CRATES[7..9]` |
 | `CRATES-W` | x −24.6 … −23.2, z 28.9 | `CRATES[10..11]` |
+
+### South wall
+
+| Name | Where | What it is | Source |
+| --- | --- | --- | --- |
+| `PORTAL` | (0, 33.45), opening x −1.5 … 1.5, faces north | Dark stone doorway with pink glow, "PORTAL" title, crown 5 / ball 5 requirement rows | `PORTAL` |
 
 ### Structure
 

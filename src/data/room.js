@@ -80,12 +80,13 @@ export const OFFLINE_SIGN = { x: 23.2, z: -0.4, facing: -Math.PI / 2 }
 export const ROUND_TABLE = { radius: 0.95, height: 0.82 }
 export const ROUND_TABLES = [7, 13.25, 21.5].map((z) => ({ x: HALL.maxX - 4.2, z }))
 
-// Portal on the west wall, between the lockers and the egg shop. `facing`
-// is the yaw its front faces; `requires` is shown on its label (display only).
+// Portal on the middle of the south wall. `facing` is the yaw
+// its front faces (π = north, into the hall); `requires` is shown on its
+// label (display only).
 export const PORTAL = {
-  x: HALL.minX + 0.55,
-  z: 0.5,
-  facing: Math.PI / 2,
+  x: 0,
+  z: HALL.maxZ - 0.55,
+  facing: Math.PI,
   width: 3,
   height: 3.6,
   depth: 0.9,
@@ -152,9 +153,13 @@ function buildColliders() {
   out.push(box(SINK.x, SINK.z, 0.9, 0.7, 1))
   for (const t of ROUND_TABLES) out.push(box(t.x, t.z, 2 * ROUND_TABLE.radius, 2 * ROUND_TABLE.radius, ROUND_TABLE.height))
   out.push(box(OFFLINE_SIGN.x, OFFLINE_SIGN.z, 0.5, 2.6, 2.2))
+  const portalAlongX = Math.abs(Math.sin(PORTAL.facing)) < 0.5
   for (const side of [-1, 1]) {
     // Only the two stone posts are solid; the opening between them is walkable.
-    out.push(box(PORTAL.x, PORTAL.z + side * (PORTAL.width / 2 + PORTAL.post / 2), PORTAL.depth, PORTAL.post, PORTAL.height + 0.6))
+    const off = side * (PORTAL.width / 2 + PORTAL.post / 2)
+    out.push(portalAlongX
+      ? box(PORTAL.x + off, PORTAL.z, PORTAL.post, PORTAL.depth, PORTAL.height + 0.6)
+      : box(PORTAL.x, PORTAL.z + off, PORTAL.depth, PORTAL.post, PORTAL.height + 0.6))
   }
   for (const e of EGGS) {
     const r = EGG_PEDESTAL.radius * (e.size > 1 ? 1.35 : 1)
